@@ -111,7 +111,7 @@
                 <nav x-data="{ open: false }" class="sticky top-0 z-40 mt-4 rounded-3xl border border-white/70 bg-white/85 px-3 py-3 shadow-[0_20px_50px_rgba(18,24,38,0.08)] backdrop-blur">
                     <!-- Mobile/tablet: hamburger row -->
                     <div class="flex items-center justify-between lg:hidden">
-                        <span class="px-1 text-sm font-semibold text-[#0d2a4a]">Splash City West</span>
+                        {{-- <span class="px-1 text-sm font-semibold text-[#0d2a4a]">Splash City West</span> --}}
                         <button
                             @click="open = !open"
                             :aria-expanded="open"
