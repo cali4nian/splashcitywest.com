@@ -3,10 +3,47 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>Splash City West | Fresno AAU Basketball | Coach Charlie Ross</title>
+
         <meta
             name="description"
-            content="Information hub for Splash City West AAU and Roosevelt High School basketball, with donation links for PayPal, Cash App, and Stripe."
+            content="Splash City West is a premier AAU basketball program in Fresno, California, led by Head Coach Charlie Ross. Developing student-athletes through elite training, competitive tournaments, and a commitment to excellence."
         >
+
+        <meta
+            name="keywords"
+            content="Splash City West, Fresno AAU basketball, AAU basketball Fresno, Charlie Ross, Coach Charlie Ross, youth basketball Fresno, California AAU basketball, basketball training Fresno, travel basketball Fresno, Roosevelt High School basketball"
+        >
+
+        <meta name="author" content="Splash City West">
+        <meta name="robots" content="index, follow">
+        <meta name="theme-color" content="#0057B8">
+
+        <!-- Open Graph -->
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="Splash City West | Fresno AAU Basketball">
+        <meta
+            property="og:description"
+            content="Elite AAU basketball program in Fresno, CA, led by Head Coach Charlie Ross. Building champions on and off the court."
+        >
+        <meta property="og:site_name" content="Splash City West">
+        <meta property="og:locale" content="en_US">
+        <meta property="og:url" content="https://www.splashcitywest.com">
+        <meta property="og:image" content="https://www.splashcitywest.com/images/social-preview.jpg">
+
+        <!-- Twitter -->
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="Splash City West | Fresno AAU Basketball">
+        <meta
+            name="twitter:description"
+            content="Premier AAU basketball program in Fresno, California, led by Head Coach Charlie Ross."
+        >
+        <meta name="twitter:image" content="https://www.splashcitywest.com/images/social-preview.jpg">
+
+        <!-- Canonical -->
+        <link rel="canonical" href="https://www.splashcitywest.com">
+
         <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
         <link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}">
 
@@ -36,42 +73,86 @@
             <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.22),transparent_34%),radial-gradient(circle_at_top_right,rgba(31,111,235,0.18),transparent_28%),linear-gradient(180deg,#f7f1e7_0%,#efe6d8_54%,#f4efe6_100%)]"></div>
             <div class="absolute left-1/2 -top-40 h-96 w-96 -translate-x-1/2 rounded-full bg-[#0d2a4a]/10 blur-3xl"></div>
 
-            <main class="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
+            <main class="relative flex flex-col w-full min-h-screen px-4 py-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <header class="flex items-center justify-between rounded-4xl border border-white/50 bg-white/70 px-5 py-4 shadow-[0_24px_80px_rgba(18,24,38,0.08)] backdrop-blur md:px-7">
                     <div class="flex items-center gap-3">
                         <img
                             src="{{ asset('images/logo.png') }}"
                             alt="{{ config('app.name', 'Charlie Ross') }} logo"
-                            class="h-11 w-11 rounded-xl object-contain"
+                            class="object-contain w-10 h-10 shrink-0 rounded-xl sm:h-11 sm:w-11"
                         >
 
                         <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.35em] text-[#f26a0a]">Head coach leadership hub</p>
-                        <h1 class="mt-1 text-lg font-semibold text-[#0d2a4a] sm:text-xl">{{ config('app.name', 'Charlie Ross') }}</h1>
+                        <p class="hidden text-xs font-semibold uppercase tracking-[0.35em] text-[#f26a0a] sm:block">Head coach</p>
+                        <h1 class="text-base font-semibold text-[#0d2a4a] sm:mt-1 sm:text-xl">{{ config('app.name', 'Charlie Ross') }}</h1>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2">
                         @if (Route::has('login'))
                             @auth
-                                <a href="{{ route('admin.dashboard') }}" class="rounded-full border border-[#0d2a4a]/20 bg-white px-4 py-2 text-sm font-semibold text-[#0d2a4a] transition hover:border-[#0d2a4a]/40 hover:text-[#1f2a44]">
+                                <a href="{{ route('admin.dashboard') }}" class="hidden rounded-full border border-[#0d2a4a]/20 bg-white px-4 py-2 text-sm font-semibold text-[#0d2a4a] transition hover:border-[#0d2a4a]/40 hover:text-[#1f2a44] md:inline-flex">
                                     Admin Panel
                                 </a>
                             @else
-                                <a href="{{ route('login') }}" class="rounded-full border border-[#0d2a4a]/20 bg-white px-4 py-2 text-sm font-semibold text-[#0d2a4a] transition hover:border-[#0d2a4a]/40 hover:text-[#1f2a44]">
+                                <a href="{{ route('login') }}" class="hidden rounded-full border border-[#0d2a4a]/20 bg-white px-4 py-2 text-sm font-semibold text-[#0d2a4a] transition hover:border-[#0d2a4a]/40 hover:text-[#1f2a44] md:inline-flex">
                                     Login
                                 </a>
                             @endauth
                         @endif
 
                         <a href="#donate" class="rounded-full bg-[#0d2a4a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#1f2a44]">
-                            Donate now
+                            <span class="hidden sm:inline">Donate now</span>
+                            <span class="sm:hidden">Donate</span>
                         </a>
                     </div>
                 </header>
 
-                <nav class="sticky top-0 z-40 mt-4 rounded-3xl border border-white/70 bg-white/85 px-3 py-3 shadow-[0_20px_50px_rgba(18,24,38,0.08)] backdrop-blur">
-                    <div class="overflow-x-auto">
+                <nav x-data="{ open: false }" class="sticky top-0 z-40 mt-4 rounded-3xl border border-white/70 bg-white/85 px-3 py-3 shadow-[0_20px_50px_rgba(18,24,38,0.08)] backdrop-blur">
+                    <!-- Mobile/tablet: hamburger row -->
+                    <div class="flex items-center justify-between lg:hidden">
+                        <span class="px-1 text-sm font-semibold text-[#0d2a4a]">Splash City West</span>
+                        <button
+                            @click="open = !open"
+                            :aria-expanded="open"
+                            aria-label="Toggle navigation menu"
+                            class="rounded-full border border-[#0d2a4a]/20 p-2 text-[#0d2a4a] transition hover:bg-white"
+                        >
+                            <svg x-show="!open" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                            <svg x-show="open" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Mobile: dropdown grid -->
+                    <div
+                        x-show="open"
+                        x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter-start="opacity-0 -translate-y-1"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-100"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 -translate-y-1"
+                        class="grid grid-cols-2 gap-1 mt-2 lg:hidden"
+                        @click="open = false"
+                    >
+                        <a href="#hero" class="inline-flex rounded-full border border-transparent px-4 py-2 text-sm font-semibold text-[#0d2a4a] transition hover:border-[#f26a0a]/30 hover:bg-white hover:text-[#f26a0a]">Overview</a>
+                        <a href="#gallery" class="inline-flex rounded-full border border-transparent px-4 py-2 text-sm font-semibold text-[#0d2a4a] transition hover:border-[#f26a0a]/30 hover:bg-white hover:text-[#f26a0a]">Gallery</a>
+                        <a href="#contact" class="inline-flex rounded-full border border-transparent px-4 py-2 text-sm font-semibold text-[#0d2a4a] transition hover:border-[#f26a0a]/30 hover:bg-white hover:text-[#f26a0a]">Contact</a>
+                        <a href="#programs" class="inline-flex rounded-full border border-transparent px-4 py-2 text-sm font-semibold text-[#0d2a4a] transition hover:border-[#f26a0a]/30 hover:bg-white hover:text-[#f26a0a]">Programs</a>
+                        <a href="#events" class="inline-flex rounded-full border border-transparent px-4 py-2 text-sm font-semibold text-[#0d2a4a] transition hover:border-[#f26a0a]/30 hover:bg-white hover:text-[#f26a0a]">Events</a>
+                        <a href="#success-stories" class="inline-flex rounded-full border border-transparent px-4 py-2 text-sm font-semibold text-[#0d2a4a] transition hover:border-[#f26a0a]/30 hover:bg-white hover:text-[#f26a0a]">Stories</a>
+                        <a href="#donate" class="inline-flex rounded-full border border-transparent px-4 py-2 text-sm font-semibold text-[#0d2a4a] transition hover:border-[#f26a0a]/30 hover:bg-white hover:text-[#f26a0a]">Donate</a>
+                        @if (Route::has('login'))
+                            @auth
+                                <a href="{{ route('admin.dashboard') }}" class="inline-flex rounded-full border border-transparent px-4 py-2 text-sm font-semibold text-[#0d2a4a] transition hover:border-[#f26a0a]/30 hover:bg-white hover:text-[#f26a0a]">Admin</a>
+                            @else
+                                <a href="{{ route('login') }}" class="inline-flex rounded-full border border-transparent px-4 py-2 text-sm font-semibold text-[#0d2a4a] transition hover:border-[#f26a0a]/30 hover:bg-white hover:text-[#f26a0a]">Login</a>
+                            @endauth
+                        @endif
+                    </div>
+
+                    <!-- Desktop: horizontal scroll nav -->
+                    <div class="hidden overflow-x-auto lg:block">
                         <ul class="flex min-w-max items-center gap-2 text-sm font-semibold text-[#0d2a4a]">
                         <li><a href="#hero" class="inline-flex rounded-full border border-transparent px-4 py-2 transition hover:border-[#f26a0a]/30 hover:bg-white hover:text-[#f26a0a]">Overview</a></li>
                         <li><a href="#gallery" class="inline-flex rounded-full border border-transparent px-4 py-2 transition hover:border-[#f26a0a]/30 hover:bg-white hover:text-[#f26a0a]">Gallery</a></li>
@@ -114,7 +195,7 @@
                             <a href="#programs" class="rounded-full border border-[#0d2a4a]/10 bg-white px-5 py-3 text-sm font-semibold text-[#0d2a4a] shadow-sm transition hover:border-[#f26a0a]/40 hover:text-[#f26a0a]">
                                 Explore programs
                             </a>
-                            <a href="#donate" class="rounded-full bg-linear-to-r from-[#f26a0a] to-[#f4b400] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[#f26a0a]/25 transition hover:brightness-105">
+                            <a href="#donate" class="rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#0d2a4a] shadow-lg shadow-[#f26a0a]/25 transition hover:brightness-105">
                                 Support the team
                             </a>
                         </div>
@@ -148,7 +229,7 @@
                                         <p class="text-xs font-semibold uppercase tracking-[0.32em] text-white/70">Program overview</p>
                                         <h3 class="mt-2 text-2xl font-black">Built for families, players, and supporters</h3>
                                     </div>
-                                    <div class="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-right">
+                                    <div class="px-4 py-3 text-right border rounded-2xl border-white/10 bg-white/10">
                                         <p class="text-xs uppercase tracking-[0.28em] text-white/60">Live</p>
                                         <p class="mt-1 text-sm font-semibold">Donation links ready</p>
                                     </div>
@@ -156,7 +237,7 @@
 
                                 <div class="grid gap-4">
                                     @foreach ($featuredPrograms as $featuredProgram)
-                                        <article class="rounded-3xl border border-white/10 bg-white/8 p-5">
+                                        <article class="p-5 border rounded-3xl border-white/10 bg-white/8">
                                             <p class="text-xs font-semibold uppercase tracking-[0.3em] text-[#f4b400]">{{ $featuredProgram['name'] }}</p>
                                             <p class="mt-3 text-lg font-semibold">{{ $featuredProgram['subtitle'] ?: 'Player development and team culture.' }}</p>
                                             <p class="mt-3 text-sm leading-6 text-white/75">{{ $featuredProgram['description'] }}</p>
@@ -184,10 +265,10 @@
                             <img
                                 src="{{ $headCoach['image'] }}"
                                 alt="{{ $headCoach['title'] }} profile"
-                                class="h-full w-full object-cover"
+                                class="object-cover w-full h-full"
                             >
                         </div>
-                        <div class="flex flex-1 flex-col justify-center p-6 sm:p-8 lg:p-10">
+                        <div class="flex flex-col justify-center flex-1 p-6 sm:p-8 lg:p-10">
                             <p class="text-sm font-semibold uppercase tracking-[0.28em] text-[#f26a0a]">{{ $headCoach['title'] }}</p>
                             <h4 class="mt-3 text-3xl font-black text-[#0b2340] sm:text-4xl">Head Coach Charles Ross</h4>
                             <p class="mt-4 max-w-3xl text-base leading-7 text-[#475569] sm:text-lg">
@@ -206,7 +287,7 @@
                                     <img
                                         src="{{ $card['image'] }}"
                                         alt="{{ $card['title'] }} program image"
-                                        class="h-full w-full object-cover"
+                                        class="object-cover w-full h-full"
                                     >
                                 </div>
                                 <div class="p-5">
@@ -240,9 +321,9 @@
 
                         <div class="mt-6 rounded-3xl bg-[#0d2a4a] p-5 text-white">
                             <p class="text-xs font-semibold uppercase tracking-[0.3em] text-white/65">Social media</p>
-                            <div class="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                            <div class="grid gap-3 mt-4 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
                                 @foreach ($socialLinks as $social)
-                                    <a href="{{ $social['href'] }}" target="_blank" rel="noreferrer" class="rounded-2xl border border-white/10 bg-white/8 px-4 py-4 transition hover:bg-white/12">
+                                    <a href="{{ $social['href'] }}" target="_blank" rel="noreferrer" class="px-4 py-4 transition border rounded-2xl border-white/10 bg-white/8 hover:bg-white/12">
                                         <p class="text-sm font-semibold text-white">{{ $social['label'] }}</p>
                                         <p class="mt-1 text-sm text-white/70">{{ $social['value'] }}</p>
                                     </a>
@@ -254,18 +335,18 @@
                     <article class="rounded-4xl border border-white/70 bg-linear-to-br from-[#0d2a4a] via-[#1e293b] to-[#0b2340] p-7 text-white shadow-[0_20px_60px_rgba(18,24,38,0.14)]">
                         <p class="text-xs font-semibold uppercase tracking-[0.34em] text-[#f4b400]">Commitments</p>
                         <h3 class="mt-3 text-3xl font-black">Kids committed to colleges</h3>
-                        <p class="mt-4 max-w-2xl text-base leading-7 text-white/75">
+                        <p class="max-w-2xl mt-4 text-base leading-7 text-white/75">
                             Use this counter to highlight athletes who have moved on to the next level and to show the strength of the program over time.
                         </p>
 
-                        <div class="mt-8 grid gap-5 sm:grid-cols-2">
-                            <div class="rounded-3xl border border-white/10 bg-white/10 p-6">
+                        <div class="grid gap-5 mt-8 sm:grid-cols-2">
+                            <div class="p-6 border rounded-3xl border-white/10 bg-white/10">
                                 <p class="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">Committed athletes</p>
                                 <p class="mt-3 text-5xl font-black text-[#f4b400]">{{ $collegeCommitments }}</p>
                                 <p class="mt-2 text-sm leading-6 text-white/70">Current number of players committed to college programs.</p>
                             </div>
 
-                            <div class="rounded-3xl border border-white/10 bg-white/10 p-6">
+                            <div class="p-6 border rounded-3xl border-white/10 bg-white/10">
                                 <p class="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">Programs represented</p>
                                 <p class="mt-3 text-5xl font-black text-[#86efac]">{{ $programsRepresented }}</p>
                                 <p class="mt-2 text-sm leading-6 text-white/70">Current number of programs represented by the coaching platform.</p>
@@ -281,7 +362,7 @@
                                 <img
                                     src="{{ $program['image_url'] }}"
                                     alt="{{ $program['name'] }} program image"
-                                    class="h-52 w-full object-cover"
+                                    class="object-cover w-full h-52"
                                 >
                             </div>
                             <p class="text-xs font-semibold uppercase tracking-[0.34em] text-[#f26a0a]">{{ $program['subtitle'] ?: 'Program' }}</p>
@@ -334,7 +415,7 @@
                                 <p class="text-xs font-semibold uppercase tracking-[0.28em] text-white/65">Recent highlights</p>
                                 <div class="mt-4 space-y-3">
                                     @foreach ($recentHighlights as $highlight)
-                                        <div class="rounded-2xl border border-white/10 bg-white/8 px-4 py-4">
+                                        <div class="px-4 py-4 border rounded-2xl border-white/10 bg-white/8">
                                             <p class="text-sm leading-6 text-white/85">{{ $highlight }}</p>
                                         </div>
                                     @endforeach
@@ -360,7 +441,7 @@
                                     <article class="success-story-slide rounded-3xl border border-[#e2e8f0] bg-[#f8fafc] p-5 sm:p-7 {{ $loop->first ? '' : 'hidden' }}" data-success-slide>
                                         <div class="grid gap-5 sm:grid-cols-[0.35fr_0.65fr] sm:items-start">
                                             <div class="overflow-hidden rounded-2xl border border-[#e2e8f0] bg-white">
-                                                <img src="{{ $story['image_url'] }}" alt="{{ $story['name'] }} story image" class="h-44 w-full object-cover">
+                                                <img src="{{ $story['image_url'] }}" alt="{{ $story['name'] }} story image" class="object-cover w-full h-44">
                                             </div>
                                             <div>
                                                 <p class="text-xs font-semibold uppercase tracking-[0.28em] text-[#f26a0a]">{{ $story['name'] }}</p>
@@ -372,7 +453,7 @@
                                 @endforeach
                             </div>
 
-                            <div class="mt-5 flex items-center justify-between gap-4">
+                            <div class="flex items-center justify-between gap-4 mt-5">
                                 <div class="flex items-center gap-2">
                                     <button type="button" class="rounded-full border border-[#0d2a4a]/20 bg-white px-4 py-2 text-sm font-semibold text-[#0d2a4a] transition hover:border-[#f26a0a]/40 hover:text-[#f26a0a]" data-success-prev>
                                         Previous
@@ -399,13 +480,13 @@
                 </section>
 
                 <div class="pointer-events-none fixed inset-0 z-50 hidden items-center justify-center bg-[#0b1324]/70 p-4" data-event-modal>
-                    <div class="pointer-events-auto w-full max-w-2xl overflow-hidden rounded-3xl border border-white/20 bg-white shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="event-modal-title">
+                    <div class="w-full max-w-2xl overflow-hidden bg-white border shadow-2xl pointer-events-auto rounded-3xl border-white/20" role="dialog" aria-modal="true" aria-labelledby="event-modal-title">
                         <div class="relative bg-[#0d2a4a] p-5 text-white">
                             <p class="text-xs font-semibold uppercase tracking-[0.24em] text-white/70" data-event-modal-date></p>
                             <h4 id="event-modal-title" class="mt-2 text-2xl font-black" data-event-modal-title></h4>
                             <button type="button" class="absolute right-4 top-4 rounded-full border border-white/30 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-white/15" data-event-modal-close>Close</button>
                         </div>
-                        <img src="" alt="Event image" class="h-72 w-full object-cover" data-event-modal-image>
+                        <img src="" alt="Event image" class="object-cover w-full h-48 sm:h-72" data-event-modal-image>
                         <div class="p-5">
                             <p class="text-sm leading-6 text-[#475569]" data-event-modal-details></p>
                         </div>
@@ -417,14 +498,14 @@
                         <div class="max-w-3xl">
                             <p class="text-xs font-semibold uppercase tracking-[0.34em] text-[#f4b400]">Support the programs</p>
                             <h3 class="mt-3 text-3xl font-black sm:text-4xl">Support the team through our donation options.</h3>
-                            <p class="mt-4 max-w-2xl text-base leading-7 text-white/75">
+                            <p class="max-w-2xl mt-4 text-base leading-7 text-white/75">
                                 Donation methods and QR codes are managed in the admin landing settings.
                             </p>
                         </div>
 
-                        <div class="mt-8 grid gap-4 lg:grid-cols-3">
+                        <div class="grid gap-4 mt-8 sm:grid-cols-2 lg:grid-cols-3">
                             @forelse ($donations as $donation)
-                                <div class="rounded-3xl border border-white/10 bg-white/8 p-5">
+                                <div class="p-5 border rounded-3xl border-white/10 bg-white/8">
                                     <div class="flex items-center justify-between gap-4">
                                         <div>
                                             <p class="text-sm font-semibold uppercase tracking-[0.28em] text-white/65">{{ $donation['name'] }}</p>
@@ -434,8 +515,8 @@
                                     </div>
 
                                     @if (!empty($donation['qr_code_image_url']))
-                                        <div class="mt-4 rounded-2xl border border-white/15 bg-white/10 p-3">
-                                            <img src="{{ $donation['qr_code_image_url'] }}" alt="{{ $donation['name'] }} QR code" class="mx-auto h-36 w-36 rounded-xl bg-white p-1 object-contain" loading="lazy">
+                                        <div class="p-3 mt-4 border rounded-2xl border-white/15 bg-white/10">
+                                            <img src="{{ $donation['qr_code_image_url'] }}" alt="{{ $donation['name'] }} QR code" class="object-contain p-1 mx-auto bg-white h-36 w-36 rounded-xl" loading="lazy">
                                         </div>
                                     @endif
 
@@ -451,7 +532,7 @@
                                     </a>
                                 </div>
                             @empty
-                                <div class="rounded-3xl border border-white/15 bg-white/8 p-5 lg:col-span-3">
+                                <div class="p-5 border rounded-3xl border-white/15 bg-white/8 lg:col-span-3">
                                     <p class="text-sm font-semibold text-white">No donation links have been configured yet.</p>
                                     <p class="mt-2 text-sm text-white/70">Add donation methods in the admin landing settings to show them here.</p>
                                 </div>
@@ -470,11 +551,11 @@
                             </p>
                         </div>
 
-                        <div class="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                        <div class="grid gap-5 mt-7 md:grid-cols-2 xl:grid-cols-3">
                             @foreach ($staffMembers as $member)
                                 <article class="overflow-hidden rounded-3xl border border-[#e2e8f0] bg-white">
                                     <div class="h-56 bg-[#e2e8f0]">
-                                        <img src="{{ $member['image_url'] }}" alt="{{ $member['name'] }} profile image" class="h-full w-full object-cover">
+                                        <img src="{{ $member['image_url'] }}" alt="{{ $member['name'] }} profile image" class="object-cover w-full h-full">
                                     </div>
                                     <div class="p-5">
                                         <p class="text-xs font-semibold uppercase tracking-[0.28em] text-[#f26a0a]">{{ $member['position'] }}</p>
