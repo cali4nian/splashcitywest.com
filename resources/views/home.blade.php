@@ -361,12 +361,14 @@
                 <section id="programs" class="grid gap-6 pb-6 lg:grid-cols-2">
                     @foreach ($programs as $program)
                         <article class="rounded-4xl border border-white/70 bg-white/85 p-7 shadow-[0_20px_60px_rgba(18,24,38,0.08)] backdrop-blur">
-                            <div class="mb-5 overflow-hidden rounded-3xl border border-white/70 bg-[#e2e8f0]">
-                                <img
-                                    src="{{ $program['image_url'] }}"
-                                    alt="{{ $program['name'] }} program image"
-                                    class="object-cover w-full h-52"
-                                >
+                            <div class="mb-5 overflow-hidden rounded-3xl border border-white/70 bg-[#e2e8f0] p-2">
+                                <div class="flex h-56 items-center justify-center rounded-2xl bg-[#eef2f7] sm:h-60">
+                                    <img
+                                        src="{{ $program['image_url'] }}"
+                                        alt="{{ $program['name'] }} program image"
+                                        class="object-contain w-full h-full"
+                                    >
+                                </div>
                             </div>
                             <p class="text-xs font-semibold uppercase tracking-[0.34em] text-[#f26a0a]">{{ $program['subtitle'] ?: 'Program' }}</p>
                             <h3 class="mt-3 text-3xl font-black text-[#0b2340]">{{ $program['name'] }}</h3>
@@ -445,7 +447,7 @@
                                         <div class="grid gap-5 sm:grid-cols-[0.35fr_0.65fr] sm:items-start">
                                             <div class="overflow-hidden rounded-2xl border border-[#e2e8f0] bg-white p-2">
                                                 <div class="flex h-52 items-center justify-center rounded-xl bg-[#eef2f7] sm:h-56">
-                                                    <img src="{{ $story['image_url'] }}" alt="{{ $story['name'] }} story image" class="h-full w-full object-contain">
+                                                    <img src="{{ $story['image_url'] }}" alt="{{ $story['name'] }} story image" class="object-contain w-full h-full">
                                                 </div>
                                             </div>
                                             <div>
@@ -494,6 +496,15 @@
                         <img src="" alt="Event image" class="object-cover w-full h-48 sm:h-72" data-event-modal-image>
                         <div class="p-5">
                             <p class="text-sm leading-6 text-[#475569]" data-event-modal-details></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pointer-events-none fixed inset-0 z-50 hidden items-center justify-center bg-[#0b1324]/85 p-4" data-image-lightbox>
+                    <div class="relative w-full max-w-6xl p-3 border shadow-2xl pointer-events-auto rounded-3xl border-white/20 bg-white/95 sm:p-4" role="dialog" aria-modal="true" aria-label="Expanded image preview">
+                        <button type="button" class="absolute right-3 top-3 z-10 rounded-full border border-[#0d2a4a]/20 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#0d2a4a] transition hover:border-[#f26a0a]/40 hover:text-[#f26a0a]" data-image-lightbox-close>Close</button>
+                        <div class="flex max-h-[85vh] min-h-[18rem] items-center justify-center rounded-2xl bg-[#eef2f7] p-2 sm:p-4">
+                            <img src="" alt="Expanded image" class="max-h-[78vh] w-auto max-w-full object-contain" data-image-lightbox-image>
                         </div>
                     </div>
                 </div>
