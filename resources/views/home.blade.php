@@ -332,25 +332,28 @@
                         </div>
                     </article>
 
-                    <article class="rounded-4xl border border-white/70 bg-linear-to-br from-[#0d2a4a] via-[#1e293b] to-[#0b2340] p-7 text-white shadow-[0_20px_60px_rgba(18,24,38,0.14)]">
+                    <article class="relative overflow-hidden rounded-4xl border border-white/85 bg-linear-to-br from-[#061a33] via-[#102a4d] to-[#071b34] p-7 text-white ring-1 ring-[#f4b400]/35 shadow-[0_28px_85px_rgba(7,18,34,0.42)]">
+                        <div class="absolute inset-0 bg-black pointer-events-none"></div>
+                        <div class="relative z-10">
                         <p class="text-xs font-semibold uppercase tracking-[0.34em] text-[#f4b400]">Commitments</p>
                         <h3 class="mt-3 text-3xl font-black">Kids committed to colleges</h3>
-                        <p class="max-w-2xl mt-4 text-base leading-7 text-white/75">
-                            Use this counter to highlight athletes who have moved on to the next level and to show the strength of the program over time.
+                        <p class="max-w-2xl mt-4 text-base leading-7 text-white/90">
+                            This section tracks athlete college commitments and program reach, showing families and supporters the long-term impact of our coaching and development.
                         </p>
 
                         <div class="grid gap-5 mt-8 sm:grid-cols-2">
-                            <div class="p-6 border rounded-3xl border-white/10 bg-white/10">
-                                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">Committed athletes</p>
-                                <p class="mt-3 text-5xl font-black text-[#f4b400]">{{ $collegeCommitments }}</p>
-                                <p class="mt-2 text-sm leading-6 text-white/70">Current number of players committed to college programs.</p>
+                            <div class="p-6 border rounded-3xl border-white/30 bg-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] backdrop-blur-sm">
+                                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-white/85">Committed athletes</p>
+                                <p class="mt-3 text-5xl font-black text-[#f4b400] drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)]">{{ $collegeCommitments }}</p>
+                                <p class="mt-2 text-sm leading-6 text-white/85">Current number of players committed to college programs.</p>
                             </div>
 
-                            <div class="p-6 border rounded-3xl border-white/10 bg-white/10">
-                                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">Programs represented</p>
-                                <p class="mt-3 text-5xl font-black text-[#86efac]">{{ $programsRepresented }}</p>
-                                <p class="mt-2 text-sm leading-6 text-white/70">Current number of programs represented by the coaching platform.</p>
+                            <div class="p-6 border rounded-3xl border-white/30 bg-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] backdrop-blur-sm">
+                                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-white/85">Programs represented</p>
+                                <p class="mt-3 text-5xl font-black text-[#86efac] drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)]">{{ $programsRepresented }}</p>
+                                <p class="mt-2 text-sm leading-6 text-white/85">Current number of programs represented by the coaching platform.</p>
                             </div>
+                        </div>
                         </div>
                     </article>
                 </section>
@@ -440,8 +443,10 @@
                                 @foreach ($successStories as $story)
                                     <article class="success-story-slide rounded-3xl border border-[#e2e8f0] bg-[#f8fafc] p-5 sm:p-7 {{ $loop->first ? '' : 'hidden' }}" data-success-slide>
                                         <div class="grid gap-5 sm:grid-cols-[0.35fr_0.65fr] sm:items-start">
-                                            <div class="overflow-hidden rounded-2xl border border-[#e2e8f0] bg-white">
-                                                <img src="{{ $story['image_url'] }}" alt="{{ $story['name'] }} story image" class="object-cover w-full h-44">
+                                            <div class="overflow-hidden rounded-2xl border border-[#e2e8f0] bg-white p-2">
+                                                <div class="flex h-52 items-center justify-center rounded-xl bg-[#eef2f7] sm:h-56">
+                                                    <img src="{{ $story['image_url'] }}" alt="{{ $story['name'] }} story image" class="h-full w-full object-contain">
+                                                </div>
                                             </div>
                                             <div>
                                                 <p class="text-xs font-semibold uppercase tracking-[0.28em] text-[#f26a0a]">{{ $story['name'] }}</p>
@@ -575,6 +580,7 @@
                         <a href="{{ route('terms-and-conditions') }}" class="font-semibold text-[#0d2a4a] transition hover:text-[#f26a0a]">Terms &amp; Conditions</a>
                     </div>
                 </footer>
+                
             </main>
         </div>
     </body>
