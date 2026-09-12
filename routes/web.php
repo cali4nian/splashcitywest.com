@@ -19,6 +19,7 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/admin', [AdminSettingsController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/admin/settings', [AdminSettingsController::class, 'settings'])->name('admin.settings');
+    Route::get('/admin/newsletters', [AdminSettingsController::class, 'newsletters'])->name('admin.newsletters');
     Route::put('/admin/settings', [AdminSettingsController::class, 'update'])->name('admin.settings.update');
     Route::post('/admin/programs', [AdminSettingsController::class, 'storeProgram'])->name('admin.programs.store');
     Route::put('/admin/programs/{program}', [AdminSettingsController::class, 'updateProgram'])->name('admin.programs.update');
@@ -38,6 +39,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/admin/staff', [AdminSettingsController::class, 'storeStaffMember'])->name('admin.staff.store');
     Route::put('/admin/staff/{staffMember}', [AdminSettingsController::class, 'updateStaffMember'])->name('admin.staff.update');
     Route::delete('/admin/staff/{staffMember}', [AdminSettingsController::class, 'destroyStaffMember'])->name('admin.staff.destroy');
+    Route::post('/admin/newsletters', [AdminSettingsController::class, 'storeNewsletterContact'])->name('admin.newsletters.store');
+    Route::post('/admin/newsletters/send', [AdminSettingsController::class, 'sendNewsletterCampaign'])->name('admin.newsletters.send');
+    Route::post('/admin/newsletters/delete-all', [AdminSettingsController::class, 'destroyAllNewsletterContacts'])->name('admin.newsletters.destroy-all');
+    Route::put('/admin/newsletters/{newsletterContact}', [AdminSettingsController::class, 'updateNewsletterContact'])->name('admin.newsletters.update');
+    Route::delete('/admin/newsletters/{newsletterContact}', [AdminSettingsController::class, 'destroyNewsletterContact'])->name('admin.newsletters.destroy');
+    Route::post('/admin/newsletters/import', [AdminSettingsController::class, 'importNewsletterContacts'])->name('admin.newsletters.import');
 });
 
 Route::middleware('auth')->group(function () {

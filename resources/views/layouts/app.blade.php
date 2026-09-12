@@ -9,18 +9,18 @@
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800|jetbrains-mono:500,600&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="antialiased bg-[#f7f1e7] text-slate-900">
-        <div class="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(242,106,10,0.14),transparent_36%),radial-gradient(circle_at_top_right,rgba(13,42,74,0.12),transparent_40%),linear-gradient(180deg,#f7f1e7_0%,#f3ede3_55%,#f8f4ec_100%)]">
+    <body class="antialiased bg-[#f3f5f8] font-['Manrope',sans-serif] text-slate-900">
+        <div class="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(15,23,42,0.06),transparent_34%),radial-gradient(circle_at_88%_0,rgba(2,132,199,0.08),transparent_30%),linear-gradient(180deg,#f7f9fc_0%,#f2f5f9_50%,#edf1f6_100%)]">
             @include('layouts.navigation')
 
             <!-- Page Heading -->
             @isset($header)
-                <header class="border-b border-[#0d2a4a]/10 bg-white/75 backdrop-blur">
+                <header class="border-b border-slate-200/80 bg-white/80 backdrop-blur">
                     <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>

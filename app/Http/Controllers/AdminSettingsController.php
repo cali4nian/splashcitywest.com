@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DonationLink;
+use App\Models\NewsletterContact;
 use App\Models\Program;
 use App\Models\SiteSetting;
 use App\Models\SiteEvent;
@@ -11,9 +12,15 @@ use App\Models\SuccessStory;
 use App\Models\SocialLink;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Shuchkin\SimpleXLS;
+use Shuchkin\SimpleXLSX;
+use Throwable;
 
 class AdminSettingsController extends Controller
 {
@@ -45,6 +52,26 @@ class AdminSettingsController extends Controller
         ] = $this->buildAdminData();
 
         return view('admin.settings', compact('settings', 'programs', 'socialLinks', 'events', 'successStories', 'donationLinks', 'staffMembers'));
+    }
+
+    public function newsletters(Request $request): View
+    {
+        $search = trim((string) $request->query('search', ''));
+
+        $newsletterContacts = Schema::hasTable('newsletter_contacts')
+            ? NewsletterContact::query()
+                ->when($search !== '', function ($query) use ($search): void {
+                    $query->where(function ($innerQuery) use ($search): void {
+                        $innerQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+                })
+                ->orderByDesc('created_at')
+                ->paginate(100)
+                ->withQueryString()
+            : NewsletterContact::query()->whereRaw('1 = 0')->paginate(100);
+
+        return view('admin.newsletters', compact('newsletterContacts', 'search'));
     }
 
     private function buildAdminData(): array
@@ -198,7 +225,11 @@ class AdminSettingsController extends Controller
             $staffMembers = StaffMember::query()->orderBy('id')->get();
         }
 
-        return compact('settings', 'programs', 'socialLinks', 'events', 'successStories', 'donationLinks', 'staffMembers');
+        $newsletterContacts = Schema::hasTable('newsletter_contacts')
+            ? NewsletterContact::query()->orderByDesc('created_at')->get()
+            : collect();
+
+        return compact('settings', 'programs', 'socialLinks', 'events', 'successStories', 'donationLinks', 'staffMembers', 'newsletterContacts');
     }
 
     public function update(Request $request): RedirectResponse
@@ -544,5 +575,397 @@ class AdminSettingsController extends Controller
         return redirect()
             ->route('admin.settings')
             ->with('status', 'Staff member deleted successfully.');
+    }
+
+    public function storeNewsletterContact(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'newsletter_name' => ['required', 'string', 'max:150'],
+            'newsletter_email' => ['required', 'email', 'max:255', 'unique:newsletter_contacts,email'],
+        ]);
+
+        NewsletterContact::query()->create([
+            'name' => $validated['newsletter_name'],
+            'email' => strtolower($validated['newsletter_email']),
+        ]);
+
+        return redirect()
+            ->route('admin.newsletters')
+            ->with('status', 'Newsletter contact created successfully.');
+    }
+
+    public function sendNewsletterCampaign(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'campaign_template' => ['required', Rule::in(['informational', 'fundraising'])],
+            'campaign_title' => ['required', 'string', 'max:150'],
+            'campaign_body' => ['required', 'string', 'max:10000'],
+            'campaign_attachments' => ['nullable', 'array', 'max:8'],
+            'campaign_attachments.*' => [
+                'file',
+                'max:10240',
+                'mimes:pdf,txt,csv,jpg,jpeg,png,gif,webp,doc,docx,xls,xlsx,ppt,pptx,zip',
+            ],
+        ]);
+
+        $recipients = NewsletterContact::query()->orderBy('id')->get(['id', 'name', 'email']);
+
+        if ($recipients->isEmpty()) {
+            return redirect()
+                ->route('admin.newsletters')
+                ->with('status', 'No newsletter contacts found. Add contacts before sending an email.');
+        }
+
+        $attachments = collect($request->file('campaign_attachments', []))
+            ->map(static function (UploadedFile $file): array {
+                return [
+                    'name' => $file->getClientOriginalName(),
+                    'mime' => $file->getMimeType() ?: 'application/octet-stream',
+                    'data' => (string) file_get_contents($file->getRealPath()),
+                ];
+            })
+            ->filter(static fn (array $attachment): bool => $attachment['data'] !== '')
+            ->values()
+            ->all();
+
+        $sent = 0;
+        $failed = 0;
+        $deletedAfterFailure = 0;
+        $networkFailures = 0;
+        $recipientCount = $recipients->count();
+
+        foreach ($recipients->values() as $index => $recipient) {
+            try {
+                Mail::send('emails.newsletter-campaign', [
+                    'template' => $validated['campaign_template'],
+                    'title' => $validated['campaign_title'],
+                    'body' => $validated['campaign_body'],
+                    'recipientName' => $recipient->name,
+                ], function ($message) use ($recipient, $validated, $attachments): void {
+                    $message->to($recipient->email, $recipient->name)
+                        ->subject($validated['campaign_title']);
+
+                    foreach ($attachments as $attachment) {
+                        $message->attachData($attachment['data'], $attachment['name'], [
+                            'mime' => $attachment['mime'],
+                        ]);
+                    }
+                });
+
+                $sent++;
+            } catch (Throwable $exception) {
+                report($exception);
+                $failed++;
+
+                if ($this->shouldDeleteNewsletterContactAfterFailure($exception)) {
+                    $recipient->delete();
+                    $deletedAfterFailure++;
+                } else {
+                    $networkFailures++;
+                }
+            }
+
+            if ($index < $recipientCount - 1) {
+                // Space out sends to avoid burst traffic and mailbox throttling.
+                usleep(6000000);
+            }
+        }
+
+        $statusMessage = "Mass email sent to {$sent} contacts.";
+
+        if ($failed > 0) {
+            $statusMessage .= " {$failed} sends failed. Check mail configuration or logs.";
+        }
+
+        if ($deletedAfterFailure > 0) {
+            $statusMessage .= " Removed {$deletedAfterFailure} failed contact entries.";
+        }
+
+        if ($networkFailures > 0) {
+            $statusMessage .= " {$networkFailures} failed sends were kept due to network/connectivity issues.";
+        }
+
+        return redirect()
+            ->route('admin.newsletters')
+            ->with('status', $statusMessage);
+    }
+
+    public function updateNewsletterContact(Request $request, NewsletterContact $newsletterContact): RedirectResponse
+    {
+        $validated = $request->validate([
+            'newsletter_name' => ['required', 'string', 'max:150'],
+            'newsletter_email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('newsletter_contacts', 'email')->ignore($newsletterContact->id),
+            ],
+        ]);
+
+        $newsletterContact->update([
+            'name' => $validated['newsletter_name'],
+            'email' => strtolower($validated['newsletter_email']),
+        ]);
+
+        return redirect()
+            ->route('admin.newsletters')
+            ->with('status', 'Newsletter contact updated successfully.');
+    }
+
+    public function destroyNewsletterContact(NewsletterContact $newsletterContact): RedirectResponse
+    {
+        $newsletterContact->delete();
+
+        return redirect()
+            ->route('admin.newsletters')
+            ->with('status', 'Newsletter contact deleted successfully.');
+    }
+
+    public function destroyAllNewsletterContacts(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'admin_password' => ['required', 'string', 'current_password'],
+        ]);
+
+        $deletedCount = NewsletterContact::query()->delete();
+
+        return redirect()
+            ->route('admin.newsletters')
+            ->with('status', "Deleted {$deletedCount} newsletter contacts.");
+    }
+
+    public function importNewsletterContacts(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'contacts_file' => ['required', 'file', 'max:10240', 'mimes:csv,txt,xlsx,xls,json'],
+        ]);
+
+        $file = $validated['contacts_file'];
+        $extension = strtolower($file->getClientOriginalExtension());
+        $rows = $this->parseImportedRows($file->getRealPath(), $extension);
+
+        [$contacts, $skippedRows] = $this->normalizeImportedContacts($rows);
+
+        if (count($contacts) === 0) {
+            return redirect()
+                ->route('admin.newsletters')
+                ->with('status', 'No valid contacts were found in the uploaded file.');
+        }
+
+        $created = 0;
+        $updated = 0;
+
+        foreach ($contacts as $contact) {
+            $existing = NewsletterContact::query()->firstWhere('email', $contact['email']);
+
+            if ($existing) {
+                $existing->update(['name' => $contact['name']]);
+                $updated++;
+                continue;
+            }
+
+            NewsletterContact::query()->create($contact);
+            $created++;
+        }
+
+        $statusMessage = "Imported {$created} new contacts and updated {$updated} contacts.";
+
+        if ($skippedRows > 0) {
+            $statusMessage .= " Skipped {$skippedRows} invalid rows.";
+        }
+
+        return redirect()
+            ->route('admin.newsletters')
+            ->with('status', $statusMessage);
+    }
+
+    private function parseImportedRows(string $filePath, string $extension): array
+    {
+        if ($extension === 'xlsx') {
+            $xlsx = SimpleXLSX::parse($filePath);
+
+            return $xlsx ? $xlsx->rows() : [];
+        }
+
+        if ($extension === 'xls') {
+            $xls = SimpleXLS::parse($filePath);
+
+            return $xls ? $xls->rows() : [];
+        }
+
+        if ($extension === 'json') {
+            $decoded = json_decode((string) file_get_contents($filePath), true);
+
+            return is_array($decoded) ? $decoded : [];
+        }
+
+        $rows = [];
+        $handle = fopen($filePath, 'rb');
+
+        if (! $handle) {
+            return [];
+        }
+
+        $firstLine = fgets($handle);
+        $delimiter = $this->detectCsvDelimiter($firstLine ?: '');
+        rewind($handle);
+
+        while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
+            $rows[] = $row;
+        }
+
+        fclose($handle);
+
+        return $rows;
+    }
+
+    private function normalizeImportedContacts(array $rows): array
+    {
+        $contacts = [];
+        $seenEmails = [];
+        $skippedRows = 0;
+        $headerIndexes = null;
+
+        foreach ($rows as $index => $row) {
+            if (! is_array($row)) {
+                $skippedRows++;
+                continue;
+            }
+
+            $name = '';
+            $email = '';
+
+            if ($this->isAssocArray($row)) {
+                $name = trim((string) ($row['name'] ?? $row['full_name'] ?? $row['first_name'] ?? ''));
+                $email = trim((string) ($row['email'] ?? $row['email_address'] ?? ''));
+            } else {
+                $rowValues = array_map(static fn ($value): string => trim((string) $value), array_values($row));
+
+                if ($index === 0) {
+                    $headerIndexes = $this->detectHeaderIndexes($rowValues);
+
+                    if ($headerIndexes !== null) {
+                        continue;
+                    }
+                }
+
+                if ($headerIndexes !== null) {
+                    $name = $rowValues[$headerIndexes['name']] ?? '';
+                    $email = $rowValues[$headerIndexes['email']] ?? '';
+                } else {
+                    $name = $rowValues[0] ?? '';
+                    $email = $rowValues[1] ?? '';
+                }
+            }
+
+            $email = strtolower($email);
+
+            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $skippedRows++;
+                continue;
+            }
+
+            if ($name === '') {
+                $name = ucwords(str_replace(['.', '_', '-'], ' ', strtok($email, '@') ?: 'Subscriber'));
+            }
+
+            if (isset($seenEmails[$email])) {
+                continue;
+            }
+
+            $contacts[] = [
+                'name' => $name,
+                'email' => $email,
+            ];
+            $seenEmails[$email] = true;
+        }
+
+        return [$contacts, $skippedRows];
+    }
+
+    private function detectHeaderIndexes(array $row): ?array
+    {
+        $normalized = array_map(static fn (string $value): string => strtolower(trim($value)), $row);
+        $nameIndex = array_search('name', $normalized, true);
+        $emailIndex = array_search('email', $normalized, true);
+
+        if ($nameIndex === false) {
+            $nameIndex = array_search('full name', $normalized, true);
+        }
+
+        if ($emailIndex === false) {
+            $emailIndex = array_search('email address', $normalized, true);
+        }
+
+        if ($nameIndex === false || $emailIndex === false) {
+            return null;
+        }
+
+        return [
+            'name' => $nameIndex,
+            'email' => $emailIndex,
+        ];
+    }
+
+    private function detectCsvDelimiter(string $sampleLine): string
+    {
+        $delimiters = [',', ';', "\t", '|'];
+        $bestDelimiter = ',';
+        $bestCount = -1;
+
+        foreach ($delimiters as $delimiter) {
+            $count = substr_count($sampleLine, $delimiter);
+
+            if ($count > $bestCount) {
+                $bestCount = $count;
+                $bestDelimiter = $delimiter;
+            }
+        }
+
+        return $bestDelimiter;
+    }
+
+    private function isAssocArray(array $array): bool
+    {
+        return array_keys($array) !== range(0, count($array) - 1);
+    }
+
+    private function shouldDeleteNewsletterContactAfterFailure(Throwable $exception): bool
+    {
+        return ! $this->isNetworkConnectivityFailure($exception);
+    }
+
+    private function isNetworkConnectivityFailure(Throwable $exception): bool
+    {
+        $networkKeywords = [
+            'connection timed out',
+            'timed out',
+            'network is unreachable',
+            'could not resolve host',
+            'name or service not known',
+            'temporary failure in name resolution',
+            'failed to connect',
+            'connection refused',
+            'connection reset',
+            'broken pipe',
+            'operation timed out',
+            'php_network_getaddresses',
+        ];
+
+        $current = $exception;
+
+        while ($current instanceof Throwable) {
+            $message = strtolower($current->getMessage());
+
+            foreach ($networkKeywords as $keyword) {
+                if (str_contains($message, $keyword)) {
+                    return true;
+                }
+            }
+
+            $current = $current->getPrevious();
+        }
+
+        return false;
     }
 }

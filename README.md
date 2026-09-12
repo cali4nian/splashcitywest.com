@@ -60,7 +60,7 @@ To ensure local design and feature work never affects production services:
 - Keep `APP_ENV=local` in your `.env`.
 - Use local-only endpoints for `APP_URL`, `DB_HOST`, `REDIS_HOST`, and `MAIL_HOST`.
 - The app includes a local safety guard (`LOCAL_SAFETY_CHECK=true`) that blocks startup if those values look non-local.
-- Keep local defaults for development (`MAIL_MAILER=log`, `FILESYSTEM_DISK=local`, local database credentials).
+- Configure Mailtrap credentials for local email delivery (`MAIL_MAILER=mailtrap`, `MAILTRAP_HOST`, `MAILTRAP_PORT`, `MAILTRAP_USERNAME`, `MAILTRAP_PASSWORD`).
 - Never run deployment or production sync commands from this project directory unless intended.
 
 If you intentionally need a remote endpoint during local debugging, set `LOCAL_SAFETY_CHECK=false` temporarily in `.env`.

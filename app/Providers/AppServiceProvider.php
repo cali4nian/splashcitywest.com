@@ -44,6 +44,10 @@ class AppServiceProvider extends ServiceProvider
         ];
 
         foreach ($checks as $name => $value) {
+            if ($name === 'MAIL_HOST' && $this->isAllowedMailTestingHost($value)) {
+                continue;
+            }
+
             if ($this->isLikelyLocalEndpoint($value)) {
                 continue;
             }
@@ -100,5 +104,23 @@ class AppServiceProvider extends ServiceProvider
         }
 
         return false;
+    }
+
+    /**
+     * Allow trusted email testing providers in local development.
+     */
+    private function isAllowedMailTestingHost(string $value): bool
+    {
+        $value = trim($value);
+
+        if ($value === '') {
+            return false;
+        }
+
+        $host = parse_url($value, PHP_URL_HOST);
+        $host = is_string($host) && $host !== '' ? $host : $value;
+        $host = strtolower($host);
+
+        return $host === 'sandbox.smtp.mailtrap.io' || str_ends_with($host, '.mailtrap.io');
     }
 }

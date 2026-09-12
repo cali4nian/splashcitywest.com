@@ -1,20 +1,21 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Administration</p>
-                <h2 class="mt-1 text-2xl font-semibold text-slate-900">Landing Page Settings</h2>
+                <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-700">Administration</p>
+                <h2 class="mt-1 text-3xl font-bold text-slate-900">Landing Page Settings</h2>
+                <p class="mt-2 text-sm text-slate-600">Edit homepage content with clear, grouped controls.</p>
             </div>
-            <div class="flex flex-wrap items-center gap-3">
+            <div class="flex flex-wrap items-center gap-2">
                 <a
                     href="{{ route('admin.dashboard') }}"
-                    class="inline-flex items-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
+                    class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-slate-900"
                 >
                     Back to Dashboard
                 </a>
                 <a
                     href="{{ route('home') }}"
-                    class="inline-flex items-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
+                    class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-slate-900"
                 >
                     View Public Site
                 </a>
@@ -23,9 +24,9 @@
     </x-slot>
 
     <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div class="mb-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <p class="text-sm font-medium text-slate-600">Welcome back, {{ Auth::user()->name }}.</p>
-            <h3 class="mt-2 text-3xl font-semibold text-slate-900">Manage Landing Page Content</h3>
+        <div class="mb-8 rounded-3xl border border-slate-200/90 bg-white/95 p-6 shadow-sm sm:p-8">
+            <p class="text-sm font-semibold text-cyan-700">Welcome back, {{ Auth::user()->name }}.</p>
+            <h3 class="mt-2 text-3xl font-bold text-slate-900">Manage Landing Page Content</h3>
             <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
                 This page controls the editable sections displayed on the public homepage, including settings, programs,
                 events, social links, stories, donation links, and staff cards.
@@ -112,22 +113,41 @@
                             Manage Staff
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ route('admin.newsletters') }}" class="inline-flex items-center font-medium text-slate-900 hover:text-slate-600">
+                            Manage Newsletter Contacts
+                        </a>
+                    </li>
                 </ul>
             </section>
 
-            <section id="settings" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm scroll-mt-24">
-                <h4 class="text-lg font-semibold text-slate-900">Public Contact and Commitment Settings</h4>
-                <p class="mt-2 text-sm leading-6 text-slate-600">
-                    Update what appears on the public homepage contact section and commitments counter.
-                </p>
+            <section id="settings" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm scroll-mt-24" data-collapsible-section="settings">
+                <button
+                    type="button"
+                    class="flex w-full items-center justify-between gap-4 text-left"
+                    data-collapse-toggle="settings"
+                    aria-expanded="false"
+                    aria-controls="landing-section-settings"
+                >
+                    <span>
+                        <h4 class="text-lg font-semibold text-slate-900">Public Contact and Commitment Settings</h4>
+                        <p class="mt-2 text-sm leading-6 text-slate-600">
+                            Update what appears on the public homepage contact section and commitments counter.
+                        </p>
+                    </span>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-600" data-collapse-label>
+                        Show
+                    </span>
+                </button>
 
+                <div id="landing-section-settings" class="mt-5 hidden" data-collapse-content>
                 @if (session('status'))
-                    <div class="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                    <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
                         {{ session('status') }}
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('admin.settings.update') }}" class="mt-5 space-y-4">
+                <form method="POST" action="{{ route('admin.settings.update') }}" class="space-y-4 {{ session('status') ? 'mt-4' : '' }}">
                     @csrf
                     @method('PUT')
 
@@ -189,16 +209,31 @@
                         <x-primary-button>Save Settings</x-primary-button>
                     </div>
                 </form>
+                </div>
             </section>
         </div>
 
-        <section id="programs" class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm scroll-mt-24">
-            <h4 class="text-lg font-semibold text-slate-900">Manage Programs</h4>
-            <p class="mt-2 text-sm leading-6 text-slate-600">
-                Add, edit, and remove program cards shown on the public homepage.
-            </p>
+        <section id="programs" class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm scroll-mt-24" data-collapsible-section="programs">
+            <button
+                type="button"
+                class="flex w-full items-center justify-between gap-4 text-left"
+                data-collapse-toggle="programs"
+                aria-expanded="false"
+                aria-controls="landing-section-programs"
+            >
+                <span>
+                    <h4 class="text-lg font-semibold text-slate-900">Manage Programs</h4>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                        Add, edit, and remove program cards shown on the public homepage.
+                    </p>
+                </span>
+                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-600" data-collapse-label>
+                    Show
+                </span>
+            </button>
 
-            <form method="POST" action="{{ route('admin.programs.store') }}" enctype="multipart/form-data" class="mt-5 grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div id="landing-section-programs" class="mt-5 hidden" data-collapse-content>
+            <form method="POST" action="{{ route('admin.programs.store') }}" enctype="multipart/form-data" class="grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-3">
                 @csrf
 
                 <div>
@@ -280,15 +315,30 @@
                     </p>
                 @endforelse
             </div>
+            </div>
         </section>
 
-        <section id="social-links" class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm scroll-mt-24">
-            <h4 class="text-lg font-semibold text-slate-900">Manage Social Media Links</h4>
-            <p class="mt-2 text-sm leading-6 text-slate-600">
-                Add, edit, and remove social links shown in the public contact section.
-            </p>
+        <section id="social-links" class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm scroll-mt-24" data-collapsible-section="social-links">
+            <button
+                type="button"
+                class="flex w-full items-center justify-between gap-4 text-left"
+                data-collapse-toggle="social-links"
+                aria-expanded="false"
+                aria-controls="landing-section-social-links"
+            >
+                <span>
+                    <h4 class="text-lg font-semibold text-slate-900">Manage Social Media Links</h4>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                        Add, edit, and remove social links shown in the public contact section.
+                    </p>
+                </span>
+                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-600" data-collapse-label>
+                    Show
+                </span>
+            </button>
 
-            <form method="POST" action="{{ route('admin.social-links.store') }}" class="mt-5 grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div id="landing-section-social-links" class="mt-5 hidden" data-collapse-content>
+            <form method="POST" action="{{ route('admin.social-links.store') }}" class="grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-3">
                 @csrf
 
                 <div>
@@ -353,15 +403,30 @@
                     </p>
                 @endforelse
             </div>
+            </div>
         </section>
 
-        <section id="events" class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm scroll-mt-24">
-            <h4 class="text-lg font-semibold text-slate-900">Manage Current Events</h4>
-            <p class="mt-2 text-sm leading-6 text-slate-600">
-                Add, edit, and remove events shown in the public Current Events section.
-            </p>
+        <section id="events" class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm scroll-mt-24" data-collapsible-section="events">
+            <button
+                type="button"
+                class="flex w-full items-center justify-between gap-4 text-left"
+                data-collapse-toggle="events"
+                aria-expanded="false"
+                aria-controls="landing-section-events"
+            >
+                <span>
+                    <h4 class="text-lg font-semibold text-slate-900">Manage Current Events</h4>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                        Add, edit, and remove events shown in the public Current Events section.
+                    </p>
+                </span>
+                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-600" data-collapse-label>
+                    Show
+                </span>
+            </button>
 
-            <form method="POST" action="{{ route('admin.events.store') }}" enctype="multipart/form-data" class="mt-5 grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div id="landing-section-events" class="mt-5 hidden" data-collapse-content>
+            <form method="POST" action="{{ route('admin.events.store') }}" enctype="multipart/form-data" class="grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-3">
                 @csrf
 
                 <div>
@@ -443,15 +508,30 @@
                     </p>
                 @endforelse
             </div>
+            </div>
         </section>
 
-        <section id="success-stories" class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm scroll-mt-24">
-            <h4 class="text-lg font-semibold text-slate-900">Manage Success Stories</h4>
-            <p class="mt-2 text-sm leading-6 text-slate-600">
-                Add, edit, and remove success stories shown in the public Success Stories section.
-            </p>
+        <section id="success-stories" class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm scroll-mt-24" data-collapsible-section="success-stories">
+            <button
+                type="button"
+                class="flex w-full items-center justify-between gap-4 text-left"
+                data-collapse-toggle="success-stories"
+                aria-expanded="false"
+                aria-controls="landing-section-success-stories"
+            >
+                <span>
+                    <h4 class="text-lg font-semibold text-slate-900">Manage Success Stories</h4>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                        Add, edit, and remove success stories shown in the public Success Stories section.
+                    </p>
+                </span>
+                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-600" data-collapse-label>
+                    Show
+                </span>
+            </button>
 
-            <form method="POST" action="{{ route('admin.success-stories.store') }}" enctype="multipart/form-data" class="mt-5 grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div id="landing-section-success-stories" class="mt-5 hidden" data-collapse-content>
+            <form method="POST" action="{{ route('admin.success-stories.store') }}" enctype="multipart/form-data" class="grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-3">
                 @csrf
 
                 <div>
@@ -533,15 +613,30 @@
                     </p>
                 @endforelse
             </div>
+            </div>
         </section>
 
-        <section id="donation-links" class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm scroll-mt-24">
-            <h4 class="text-lg font-semibold text-slate-900">Manage Donation Links</h4>
-            <p class="mt-2 text-sm leading-6 text-slate-600">
-                Add, edit, and remove donation links shown in the Support the Programs section.
-            </p>
+        <section id="donation-links" class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm scroll-mt-24" data-collapsible-section="donation-links">
+            <button
+                type="button"
+                class="flex w-full items-center justify-between gap-4 text-left"
+                data-collapse-toggle="donation-links"
+                aria-expanded="false"
+                aria-controls="landing-section-donation-links"
+            >
+                <span>
+                    <h4 class="text-lg font-semibold text-slate-900">Manage Donation Links</h4>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                        Add, edit, and remove donation links shown in the Support the Programs section.
+                    </p>
+                </span>
+                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-600" data-collapse-label>
+                    Show
+                </span>
+            </button>
 
-            <form method="POST" action="{{ route('admin.donation-links.store') }}" enctype="multipart/form-data" class="mt-5 grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div id="landing-section-donation-links" class="mt-5 hidden" data-collapse-content>
+            <form method="POST" action="{{ route('admin.donation-links.store') }}" enctype="multipart/form-data" class="grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-3">
                 @csrf
 
                 <div>
@@ -623,15 +718,30 @@
                     </p>
                 @endforelse
             </div>
+            </div>
         </section>
 
-        <section id="staff" class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm scroll-mt-24">
-            <h4 class="text-lg font-semibold text-slate-900">Manage Staff</h4>
-            <p class="mt-2 text-sm leading-6 text-slate-600">
-                Add, edit, and remove staff cards shown after the Support the Programs section.
-            </p>
+        <section id="staff" class="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm scroll-mt-24" data-collapsible-section="staff">
+            <button
+                type="button"
+                class="flex w-full items-center justify-between gap-4 text-left"
+                data-collapse-toggle="staff"
+                aria-expanded="false"
+                aria-controls="landing-section-staff"
+            >
+                <span>
+                    <h4 class="text-lg font-semibold text-slate-900">Manage Staff</h4>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                        Add, edit, and remove staff cards shown after the Support the Programs section.
+                    </p>
+                </span>
+                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-600" data-collapse-label>
+                    Show
+                </span>
+            </button>
 
-            <form method="POST" action="{{ route('admin.staff.store') }}" enctype="multipart/form-data" class="mt-5 grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div id="landing-section-staff" class="mt-5 hidden" data-collapse-content>
+            <form method="POST" action="{{ route('admin.staff.store') }}" enctype="multipart/form-data" class="grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-3">
                 @csrf
 
                 <div>
@@ -713,6 +823,73 @@
                     </p>
                 @endforelse
             </div>
+            </div>
         </section>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const storageKey = 'landing-settings-section-state';
+            const defaultState = {
+                'settings': false,
+                'programs': false,
+                'social-links': false,
+                'events': false,
+                'success-stories': false,
+                'donation-links': false,
+                'staff': false,
+            };
+
+            let sectionState = { ...defaultState };
+
+            try {
+                const savedState = JSON.parse(localStorage.getItem(storageKey) || '{}');
+
+                if (savedState && typeof savedState === 'object') {
+                    sectionState = { ...sectionState, ...savedState };
+                }
+            } catch (error) {
+                sectionState = { ...defaultState };
+            }
+
+            const applyState = (sectionKey, isOpen) => {
+                const toggle = document.querySelector(`[data-collapse-toggle="${sectionKey}"]`);
+                const wrapper = document.querySelector(`[data-collapsible-section="${sectionKey}"]`);
+
+                if (!toggle || !wrapper) {
+                    return;
+                }
+
+                const content = wrapper.querySelector('[data-collapse-content]');
+                const label = wrapper.querySelector('[data-collapse-label]');
+
+                if (!content || !label) {
+                    return;
+                }
+
+                content.classList.toggle('hidden', !isOpen);
+                toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                label.textContent = isOpen ? 'Hide' : 'Show';
+            };
+
+            document.querySelectorAll('[data-collapse-toggle]').forEach((toggle) => {
+                const sectionKey = toggle.getAttribute('data-collapse-toggle');
+
+                if (!sectionKey) {
+                    return;
+                }
+
+                applyState(sectionKey, sectionState[sectionKey] === true);
+
+                toggle.addEventListener('click', () => {
+                    const current = sectionState[sectionKey] === true;
+                    const nextState = !current;
+
+                    sectionState[sectionKey] = nextState;
+                    applyState(sectionKey, nextState);
+                    localStorage.setItem(storageKey, JSON.stringify(sectionState));
+                });
+            });
+        });
+    </script>
 </x-app-layout>
