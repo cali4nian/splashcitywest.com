@@ -1,5 +1,10 @@
 <?php
 
+$appHost = parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST) ?: 'localhost';
+$defaultFromAddress = $appHost === 'localhost'
+    ? 'noreply@localhost'
+    : 'noreply@'.$appHost;
+
 return [
 
     'newsletter_send_delay_us' => (int) env('NEWSLETTER_SEND_DELAY_US', 750000),
@@ -125,7 +130,7 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+        'address' => env('MAIL_FROM_ADDRESS', $defaultFromAddress),
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Charlie Ross')),
     ],
 

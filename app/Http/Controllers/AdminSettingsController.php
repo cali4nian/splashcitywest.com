@@ -945,7 +945,15 @@ class AdminSettingsController extends Controller
 
     private function shouldDeleteNewsletterContactAfterFailure(Throwable $exception): bool
     {
-        return ! $this->isNetworkConnectivityFailure($exception);
+        if ($this->isNetworkConnectivityFailure($exception)) {
+            return false;
+        }
+
+        if ($this->isMailSenderConfigurationFailure($exception)) {
+            return false;
+        }
+
+        return true;
     }
 
     private function isNetworkConnectivityFailure(Throwable $exception): bool
@@ -971,6 +979,38 @@ class AdminSettingsController extends Controller
             $message = strtolower($current->getMessage());
 
             foreach ($networkKeywords as $keyword) {
+                if (str_contains($message, $keyword)) {
+                    return true;
+                }
+            }
+
+            $current = $current->getPrevious();
+        }
+
+        return false;
+    }
+
+    private function isMailSenderConfigurationFailure(Throwable $exception): bool
+    {
+        $senderConfigKeywords = [
+            'sending from domain',
+            'sender address rejected',
+            'mail from address rejected',
+            'must be authenticated',
+            'authentication required',
+            'authentication failed',
+            'invalid login',
+            'relay access denied',
+            'not allowed to send from',
+            '5.7.1',
+        ];
+
+        $current = $exception;
+
+        while ($current instanceof Throwable) {
+            $message = strtolower($current->getMessage());
+
+            foreach ($senderConfigKeywords as $keyword) {
                 if (str_contains($message, $keyword)) {
                     return true;
                 }
