@@ -2,6 +2,8 @@
 
 return [
 
+    'newsletter_send_delay_us' => (int) env('NEWSLETTER_SEND_DELAY_US', 750000),
+
     /*
     |--------------------------------------------------------------------------
     | Default Mailer

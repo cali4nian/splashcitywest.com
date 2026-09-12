@@ -596,98 +596,111 @@ class AdminSettingsController extends Controller
 
     public function sendNewsletterCampaign(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'campaign_template' => ['required', Rule::in(['informational', 'fundraising'])],
-            'campaign_title' => ['required', 'string', 'max:150'],
-            'campaign_body' => ['required', 'string', 'max:10000'],
-            'campaign_attachments' => ['nullable', 'array', 'max:8'],
-            'campaign_attachments.*' => [
-                'file',
-                'max:10240',
-                'mimes:pdf,txt,csv,jpg,jpeg,png,gif,webp,doc,docx,xls,xlsx,ppt,pptx,zip',
-            ],
-        ]);
+        try {
+            $validated = $request->validate([
+                'campaign_template' => ['required', Rule::in(['informational', 'fundraising'])],
+                'campaign_title' => ['required', 'string', 'max:150'],
+                'campaign_body' => ['required', 'string', 'max:10000'],
+                'campaign_attachments' => ['nullable', 'array', 'max:8'],
+                'campaign_attachments.*' => [
+                    'file',
+                    'max:10240',
+                    'mimes:pdf,txt,csv,jpg,jpeg,png,gif,webp,doc,docx,xls,xlsx,ppt,pptx,zip',
+                ],
+            ]);
 
-        $recipients = NewsletterContact::query()->orderBy('id')->get(['id', 'name', 'email']);
+            $recipients = NewsletterContact::query()->orderBy('id')->get(['id', 'name', 'email']);
 
-        if ($recipients->isEmpty()) {
-            return redirect()
-                ->route('admin.newsletters')
-                ->with('status', 'No newsletter contacts found. Add contacts before sending an email.');
-        }
+            if ($recipients->isEmpty()) {
+                return redirect()
+                    ->route('admin.newsletters')
+                    ->with('status', 'No newsletter contacts found. Add contacts before sending an email.');
+            }
 
-        $attachments = collect($request->file('campaign_attachments', []))
-            ->map(static function (UploadedFile $file): array {
-                return [
-                    'name' => $file->getClientOriginalName(),
-                    'mime' => $file->getMimeType() ?: 'application/octet-stream',
-                    'data' => (string) file_get_contents($file->getRealPath()),
-                ];
-            })
-            ->filter(static fn (array $attachment): bool => $attachment['data'] !== '')
-            ->values()
-            ->all();
+            $attachments = collect($request->file('campaign_attachments', []))
+                ->map(static function (UploadedFile $file): array {
+                    return [
+                        'name' => $file->getClientOriginalName(),
+                        'mime' => $file->getMimeType() ?: 'application/octet-stream',
+                        'data' => (string) file_get_contents($file->getRealPath()),
+                    ];
+                })
+                ->filter(static fn (array $attachment): bool => $attachment['data'] !== '')
+                ->values()
+                ->all();
 
-        $sent = 0;
-        $failed = 0;
-        $deletedAfterFailure = 0;
-        $networkFailures = 0;
-        $recipientCount = $recipients->count();
+            $sent = 0;
+            $failed = 0;
+            $deletedAfterFailure = 0;
+            $networkFailures = 0;
+            $recipientCount = $recipients->count();
+            $delayBetweenSendsMicroseconds = max(0, min(6_000_000, (int) config('mail.newsletter_send_delay_us', 750000)));
 
-        foreach ($recipients->values() as $index => $recipient) {
-            try {
-                Mail::send('emails.newsletter-campaign', [
-                    'template' => $validated['campaign_template'],
-                    'title' => $validated['campaign_title'],
-                    'body' => $validated['campaign_body'],
-                    'recipientName' => $recipient->name,
-                ], function ($message) use ($recipient, $validated, $attachments): void {
-                    $message->to($recipient->email, $recipient->name)
-                        ->subject($validated['campaign_title']);
+            if (function_exists('set_time_limit')) {
+                @set_time_limit(0);
+            }
 
-                    foreach ($attachments as $attachment) {
-                        $message->attachData($attachment['data'], $attachment['name'], [
-                            'mime' => $attachment['mime'],
-                        ]);
+            foreach ($recipients->values() as $index => $recipient) {
+                try {
+                    Mail::send('emails.newsletter-campaign', [
+                        'template' => $validated['campaign_template'],
+                        'title' => $validated['campaign_title'],
+                        'body' => $validated['campaign_body'],
+                        'recipientName' => $recipient->name,
+                    ], function ($message) use ($recipient, $validated, $attachments): void {
+                        $message->to($recipient->email, $recipient->name)
+                            ->subject($validated['campaign_title']);
+
+                        foreach ($attachments as $attachment) {
+                            $message->attachData($attachment['data'], $attachment['name'], [
+                                'mime' => $attachment['mime'],
+                            ]);
+                        }
+                    });
+
+                    $sent++;
+                } catch (Throwable $exception) {
+                    report($exception);
+                    $failed++;
+
+                    if ($this->shouldDeleteNewsletterContactAfterFailure($exception)) {
+                        $recipient->delete();
+                        $deletedAfterFailure++;
+                    } else {
+                        $networkFailures++;
                     }
-                });
+                }
 
-                $sent++;
-            } catch (Throwable $exception) {
-                report($exception);
-                $failed++;
-
-                if ($this->shouldDeleteNewsletterContactAfterFailure($exception)) {
-                    $recipient->delete();
-                    $deletedAfterFailure++;
-                } else {
-                    $networkFailures++;
+                if ($index < $recipientCount - 1 && $delayBetweenSendsMicroseconds > 0) {
+                    // Keep pacing configurable to avoid provider throttling and request timeouts.
+                    usleep($delayBetweenSendsMicroseconds);
                 }
             }
 
-            if ($index < $recipientCount - 1) {
-                // Space out sends to avoid burst traffic and mailbox throttling.
-                usleep(6000000);
+            $statusMessage = "Mass email sent to {$sent} contacts.";
+
+            if ($failed > 0) {
+                $statusMessage .= " {$failed} sends failed. Check mail configuration or logs.";
             }
+
+            if ($deletedAfterFailure > 0) {
+                $statusMessage .= " Removed {$deletedAfterFailure} failed contact entries.";
+            }
+
+            if ($networkFailures > 0) {
+                $statusMessage .= " {$networkFailures} failed sends were kept due to network/connectivity issues.";
+            }
+
+            return redirect()
+                ->route('admin.newsletters')
+                ->with('status', $statusMessage);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return redirect()
+                ->route('admin.newsletters')
+                ->with('status', 'Email campaign could not be sent due to a server or mail configuration issue. Check logs and mail credentials.');
         }
-
-        $statusMessage = "Mass email sent to {$sent} contacts.";
-
-        if ($failed > 0) {
-            $statusMessage .= " {$failed} sends failed. Check mail configuration or logs.";
-        }
-
-        if ($deletedAfterFailure > 0) {
-            $statusMessage .= " Removed {$deletedAfterFailure} failed contact entries.";
-        }
-
-        if ($networkFailures > 0) {
-            $statusMessage .= " {$networkFailures} failed sends were kept due to network/connectivity issues.";
-        }
-
-        return redirect()
-            ->route('admin.newsletters')
-            ->with('status', $statusMessage);
     }
 
     public function updateNewsletterContact(Request $request, NewsletterContact $newsletterContact): RedirectResponse
