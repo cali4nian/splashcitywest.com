@@ -605,7 +605,7 @@ class AdminSettingsController extends Controller
                 'campaign_attachments.*' => [
                     'file',
                     'max:10240',
-                    'mimes:pdf,txt,csv,jpg,jpeg,png,gif,webp,doc,docx,xls,xlsx,ppt,pptx,zip',
+                    'mimes:pdf,txt,csv,jpg,jpeg,png,gif,webp,bmp,avif,heic,heif,doc,docx,xls,xlsx,ppt,pptx,zip',
                 ],
             ]);
 

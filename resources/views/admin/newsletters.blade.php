@@ -159,7 +159,7 @@
                     <input id="campaign_attachments" name="campaign_attachments[]" type="file" multiple class="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-slate-500" />
                     <x-input-error class="mt-2" :messages="$errors->get('campaign_attachments')" />
                     <x-input-error class="mt-2" :messages="$errors->get('campaign_attachments.*')" />
-                    <p class="mt-2 text-xs text-slate-500">Accepted files include PDF, CSV, images, and Office docs (max 10 MB each, up to 8 files).</p>
+                    <p class="mt-2 text-xs text-slate-500">Accepted files include PDF, CSV, images (JPG, PNG, GIF, WEBP, HEIC, HEIF, AVIF, BMP), and Office docs (max 10 MB each, up to 8 files).</p>
                 </div>
 
                 <div class="sm:col-span-2">

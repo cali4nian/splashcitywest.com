@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light only">
+    <meta name="supported-color-schemes" content="light">
     <title>{{ $title }}</title>
 </head>
 <body style="margin:0;padding:0;background:#e9eef5;font-family:'Segoe UI',Arial,Helvetica,sans-serif;color:#0f172a;">
@@ -23,19 +25,21 @@
         <td align="center">
             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:720px;background:#ffffff;border:1px solid #d7deea;border-radius:18px;overflow:hidden;box-shadow:0 12px 34px rgba(15,23,42,0.1);">
                 <tr>
-                    <td style="padding:0;background:{{ $accentSecondary }};">
-                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:linear-gradient(120deg, {{ $accentSecondary }} 0%, {{ $accent }} 70%);">
+                    <td style="padding:0;background:{{ $accentSecondary }};" bgcolor="{{ $accentSecondary }}">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:linear-gradient(120deg, {{ $accentSecondary }} 0%, {{ $accent }} 70%);" bgcolor="{{ $accentSecondary }}">
                             <tr>
-                                <td style="padding:30px 30px 16px 30px;color:#ffffff;">
-                                    <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;opacity:.95;">Splash City West Basketball</p>
-                                    <h1 style="margin:12px 0 0 0;font-size:32px;line-height:1.18;font-weight:800;letter-spacing:-0.01em;color:#ffffff;">{{ $title }}</h1>
+                                <td style="padding:30px 30px 16px 30px;color:#ffffff;" bgcolor="{{ $accentSecondary }}">
+                                    <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;opacity:.95;color:#ffffff !important;">Splash City West Basketball</p>
+                                    <h1 style="margin:12px 0 0 0;font-size:32px;line-height:1.18;font-weight:800;letter-spacing:-0.01em;color:#ffffff !important;">
+                                        <span style="color:#ffffff !important;">{{ $title }}</span>
+                                    </h1>
                                 </td>
                             </tr>
                             <tr>
                                 <td style="padding:0 30px 28px 30px;">
                                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.24);border-radius:12px;">
                                         <tr>
-                                            <td style="padding:12px 14px;color:#ffffff;font-size:14px;line-height:1.6;font-weight:500;">
+                                            <td style="padding:12px 14px;color:#ffffff !important;font-size:14px;line-height:1.6;font-weight:500;">
                                                 {{ $leadText }}
                                             </td>
                                         </tr>
