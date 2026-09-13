@@ -633,6 +633,8 @@ class AdminSettingsController extends Controller
             $failed = 0;
             $deletedAfterFailure = 0;
             $networkFailures = 0;
+            $senderConfigurationFailures = 0;
+            $stoppedForSenderConfiguration = false;
             $recipientCount = $recipients->count();
             $delayBetweenSendsMicroseconds = max(0, min(6_000_000, (int) config('mail.newsletter_send_delay_us', 750000)));
 
@@ -663,11 +665,21 @@ class AdminSettingsController extends Controller
                     report($exception);
                     $failed++;
 
+                    $isSenderConfigurationFailure = $this->isMailSenderConfigurationFailure($exception);
+
                     if ($this->shouldDeleteNewsletterContactAfterFailure($exception)) {
                         $recipient->delete();
                         $deletedAfterFailure++;
+                    } elseif ($isSenderConfigurationFailure) {
+                        $senderConfigurationFailures++;
+                        $stoppedForSenderConfiguration = true;
                     } else {
                         $networkFailures++;
+                    }
+
+                    if ($isSenderConfigurationFailure) {
+                        // Sender/domain auth issues are global; continuing will fail for all recipients.
+                        break;
                     }
                 }
 
@@ -689,6 +701,14 @@ class AdminSettingsController extends Controller
 
             if ($networkFailures > 0) {
                 $statusMessage .= " {$networkFailures} failed sends were kept due to network/connectivity issues.";
+            }
+
+            if ($senderConfigurationFailures > 0) {
+                $statusMessage .= ' Sending stopped because the configured sender/domain is not authorized by the mail provider.';
+            }
+
+            if ($stoppedForSenderConfiguration && $sent === 0) {
+                $statusMessage .= ' Update MAIL_FROM_ADDRESS and SMTP credentials, then try again.';
             }
 
             return redirect()
