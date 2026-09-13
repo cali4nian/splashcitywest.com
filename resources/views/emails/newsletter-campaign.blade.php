@@ -28,7 +28,7 @@
                             <tr>
                                 <td style="padding:30px 30px 16px 30px;color:#ffffff;">
                                     <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;opacity:.95;">Splash City West Basketball</p>
-                                    <h1 style="margin:12px 0 0 0;font-size:32px;line-height:1.18;font-weight:800;letter-spacing:-0.01em;">{{ $title }}</h1>
+                                    <h1 style="margin:12px 0 0 0;font-size:32px;line-height:1.18;font-weight:800;letter-spacing:-0.01em;color:#ffffff;">{{ $title }}</h1>
                                 </td>
                             </tr>
                             <tr>
