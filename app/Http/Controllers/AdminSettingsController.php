@@ -12,6 +12,7 @@ use App\Models\Update;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
@@ -732,29 +733,81 @@ class AdminSettingsController extends Controller
             ->with('status', "Deleted {$deletedCount} newsletter contacts.");
     }
 
-    public function testNewsletterContactDeliverability(): RedirectResponse
+    public function testNewsletterContactDeliverability(Request $request): RedirectResponse
     {
-        $maxContactsPerRun = max(1, min(500, (int) config('mail.newsletter_deliverability_max_contacts_per_run', 50)));
+        $batchSize = max(25, min(1000, (int) config('mail.newsletter_deliverability_batch_size', 300)));
         $maxRuntimeSeconds = max(5, min(120, (int) config('mail.newsletter_deliverability_max_runtime_seconds', 20)));
+        $runTtlMinutes = max(10, min(1440, (int) config('mail.newsletter_deliverability_run_ttl_minutes', 180)));
         $startTime = microtime(true);
 
-        $totalContacts = NewsletterContact::query()->count();
+        $continueRun = $request->boolean('continue_run');
+        $runToken = trim((string) $request->input('run_token', ''));
+
+        if ($continueRun && $runToken === '') {
+            return redirect()
+                ->route('admin.newsletters')
+                ->with('status', 'Deliverability run token is missing. Start a new Email Test run.');
+        }
+
+        if (! $continueRun) {
+            $totalContacts = NewsletterContact::query()->count();
+
+            if ($totalContacts === 0) {
+                return redirect()
+                    ->route('admin.newsletters')
+                    ->with('status', 'No newsletter contacts found to test.');
+            }
+
+            $runToken = bin2hex(random_bytes(16));
+
+            $state = [
+                'total' => $totalContacts,
+                'checked' => 0,
+                'removed' => 0,
+                'inconclusive' => 0,
+                'removed_samples' => [],
+                'last_id' => 0,
+            ];
+        } else {
+            $state = Cache::get($this->newsletterDeliverabilityRunCacheKey($runToken));
+
+            if (! is_array($state)) {
+                return redirect()
+                    ->route('admin.newsletters')
+                    ->with('status', 'Previous deliverability run expired. Start Email Test again.');
+            }
+        }
 
         $contacts = NewsletterContact::query()
+            ->where('id', '>', (int) $state['last_id'])
             ->orderBy('id')
-            ->limit($maxContactsPerRun)
+            ->limit($batchSize)
             ->get(['id', 'email']);
 
         if ($contacts->isEmpty()) {
+            Cache::forget($this->newsletterDeliverabilityRunCacheKey($runToken));
+
+            $statusMessage = "Deliverability test completed. Checked {$state['checked']} contacts.";
+
+            if ((int) $state['removed'] === 0) {
+                $statusMessage .= ' No contacts were removed.';
+            } else {
+                $statusMessage .= " Removed {$state['removed']} contacts that failed validation checks.";
+
+                if (count($state['removed_samples']) > 0) {
+                    $statusMessage .= ' Sample removals: ' . implode('; ', $state['removed_samples']) . '.';
+                }
+            }
+
+            if ((int) $state['inconclusive'] > 0) {
+                $statusMessage .= " {$state['inconclusive']} contacts returned inconclusive SMTP checks and were kept.";
+            }
+
             return redirect()
                 ->route('admin.newsletters')
-                ->with('status', 'No newsletter contacts found to test.');
+                ->with('status', $statusMessage);
         }
 
-        $checkedCount = 0;
-        $removedCount = 0;
-        $inconclusiveCount = 0;
-        $removedSamples = [];
         $stoppedEarly = false;
 
         foreach ($contacts as $contact) {
@@ -763,12 +816,13 @@ class AdminSettingsController extends Controller
                 break;
             }
 
-            $checkedCount++;
+            $state['checked']++;
+            $state['last_id'] = (int) $contact->id;
             $inconclusive = false;
             $failureReason = $this->getNewsletterDeliverabilityFailureReason((string) $contact->email, $inconclusive);
 
             if ($inconclusive) {
-                $inconclusiveCount++;
+                $state['inconclusive']++;
             }
 
             if ($failureReason === null) {
@@ -776,38 +830,65 @@ class AdminSettingsController extends Controller
             }
 
             $contact->delete();
-            $removedCount++;
+            $state['removed']++;
 
-            if (count($removedSamples) < 5) {
-                $removedSamples[] = $contact->email . ' (' . $failureReason . ')';
+            if (count($state['removed_samples']) < 5) {
+                $state['removed_samples'][] = $contact->email . ' (' . $failureReason . ')';
             }
         }
 
-        $statusMessage = "Deliverability test completed. Checked {$checkedCount} contacts.";
+        $remainingExists = NewsletterContact::query()->where('id', '>', (int) $state['last_id'])->exists();
 
-        if ($removedCount === 0) {
+        if ($remainingExists) {
+            Cache::put($this->newsletterDeliverabilityRunCacheKey($runToken), $state, now()->addMinutes($runTtlMinutes));
+
+            $remainingCount = max(0, (int) $state['total'] - (int) $state['checked']);
+            $statusMessage = "Deliverability batch running. Checked {$state['checked']} of {$state['total']} contacts.";
+            $statusMessage .= " Removed {$state['removed']}.";
+
+            if ((int) $state['inconclusive'] > 0) {
+                $statusMessage .= " Inconclusive kept: {$state['inconclusive']}.";
+            }
+
+            if ($stoppedEarly) {
+                $statusMessage .= ' Paused by runtime guard to avoid gateway timeout.';
+            }
+
+            $statusMessage .= " {$remainingCount} contacts remaining. Continuing automatically...";
+
+            return redirect()
+                ->route('admin.newsletters')
+                ->with('status', $statusMessage)
+                ->with('deliverability_auto_continue', true)
+                ->with('deliverability_run_token', $runToken);
+        }
+
+        Cache::forget($this->newsletterDeliverabilityRunCacheKey($runToken));
+
+        $statusMessage = "Deliverability test completed. Checked {$state['checked']} contacts.";
+
+        if ((int) $state['removed'] === 0) {
             $statusMessage .= ' No contacts were removed.';
         } else {
-            $statusMessage .= " Removed {$removedCount} contacts that failed validation checks.";
+            $statusMessage .= " Removed {$state['removed']} contacts that failed validation checks.";
 
-            if (count($removedSamples) > 0) {
-                $statusMessage .= ' Sample removals: ' . implode('; ', $removedSamples) . '.';
+            if (count($state['removed_samples']) > 0) {
+                $statusMessage .= ' Sample removals: ' . implode('; ', $state['removed_samples']) . '.';
             }
         }
 
-        if ($inconclusiveCount > 0) {
-            $statusMessage .= " {$inconclusiveCount} contacts returned inconclusive SMTP checks and were kept.";
-        }
-
-        $remainingCount = max(0, $totalContacts - $checkedCount);
-
-        if ($stoppedEarly || $remainingCount > 0) {
-            $statusMessage .= " Partial run to prevent timeout. {$remainingCount} contacts remain. Click Email Test again to continue.";
+        if ((int) $state['inconclusive'] > 0) {
+            $statusMessage .= " {$state['inconclusive']} contacts returned inconclusive SMTP checks and were kept.";
         }
 
         return redirect()
             ->route('admin.newsletters')
             ->with('status', $statusMessage);
+    }
+
+    private function newsletterDeliverabilityRunCacheKey(string $runToken): string
+    {
+        return 'newsletter-deliverability-run:' . $runToken;
     }
 
     public function importNewsletterContacts(Request $request): RedirectResponse

@@ -24,6 +24,24 @@
             </div>
         @endif
 
+        @if (session('deliverability_auto_continue') && session('deliverability_run_token'))
+            <form id="deliverability-auto-continue-form" method="POST" action="{{ route('admin.newsletters.test-deliverability') }}" class="hidden">
+                @csrf
+                <input type="hidden" name="continue_run" value="1" />
+                <input type="hidden" name="run_token" value="{{ session('deliverability_run_token') }}" />
+            </form>
+
+            <script>
+                window.setTimeout(function () {
+                    const form = document.getElementById('deliverability-auto-continue-form');
+
+                    if (form) {
+                        form.submit();
+                    }
+                }, 700);
+            </script>
+        @endif
+
         <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm" data-collapsible-section="import-contacts">
             <button
                 type="button"
