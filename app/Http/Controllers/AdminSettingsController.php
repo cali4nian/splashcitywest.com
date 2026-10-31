@@ -734,7 +734,16 @@ class AdminSettingsController extends Controller
 
     public function testNewsletterContactDeliverability(): RedirectResponse
     {
-        $contacts = NewsletterContact::query()->orderBy('id')->get(['id', 'email']);
+        $maxContactsPerRun = max(1, min(500, (int) config('mail.newsletter_deliverability_max_contacts_per_run', 50)));
+        $maxRuntimeSeconds = max(5, min(120, (int) config('mail.newsletter_deliverability_max_runtime_seconds', 20)));
+        $startTime = microtime(true);
+
+        $totalContacts = NewsletterContact::query()->count();
+
+        $contacts = NewsletterContact::query()
+            ->orderBy('id')
+            ->limit($maxContactsPerRun)
+            ->get(['id', 'email']);
 
         if ($contacts->isEmpty()) {
             return redirect()
@@ -746,8 +755,14 @@ class AdminSettingsController extends Controller
         $removedCount = 0;
         $inconclusiveCount = 0;
         $removedSamples = [];
+        $stoppedEarly = false;
 
         foreach ($contacts as $contact) {
+            if ((microtime(true) - $startTime) >= $maxRuntimeSeconds) {
+                $stoppedEarly = true;
+                break;
+            }
+
             $checkedCount++;
             $inconclusive = false;
             $failureReason = $this->getNewsletterDeliverabilityFailureReason((string) $contact->email, $inconclusive);
@@ -782,6 +797,12 @@ class AdminSettingsController extends Controller
 
         if ($inconclusiveCount > 0) {
             $statusMessage .= " {$inconclusiveCount} contacts returned inconclusive SMTP checks and were kept.";
+        }
+
+        $remainingCount = max(0, $totalContacts - $checkedCount);
+
+        if ($stoppedEarly || $remainingCount > 0) {
+            $statusMessage .= " Partial run to prevent timeout. {$remainingCount} contacts remain. Click Email Test again to continue.";
         }
 
         return redirect()
