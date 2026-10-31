@@ -3,12 +3,14 @@
 namespace Database\Seeders;
 
 use App\Models\DonationLink;
+use App\Models\HighlightLink;
 use App\Models\Program;
 use App\Models\SiteSetting;
 use App\Models\SiteEvent;
 use App\Models\StaffMember;
 use App\Models\SuccessStory;
 use App\Models\SocialLink;
+use App\Models\Update;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -144,6 +146,66 @@ class DatabaseSeeder extends Seeder
                 'title' => 'All-tournament recognition',
                 'description' => 'Turned defensive effort into impact plays and became a trusted closer in games.',
             ],
+        );
+
+        Update::query()->updateOrCreate(
+            ['category' => Update::CATEGORY_PROGRAM, 'title' => 'Splash City West'],
+            [
+                'subtitle' => 'AAU team',
+                'description' => 'A dedicated home for the AAU program. Share tryouts, tournament schedules, training priorities, and the values that guide the team.',
+                'sort_order' => 0,
+            ],
+        );
+
+        Update::query()->updateOrCreate(
+            ['category' => Update::CATEGORY_PROGRAM, 'title' => 'Roosevelt High School'],
+            [
+                'subtitle' => 'High school program',
+                'description' => 'A high-level Division II program built on high standards, accountability, and preparation for success in the classroom and in life.',
+                'sort_order' => 1,
+            ],
+        );
+
+        Update::query()->updateOrCreate(
+            ['category' => Update::CATEGORY_EVENT, 'title' => 'Splash City West Open Gym'],
+            [
+                'subtitle' => 'Jul 18, 2026',
+                'description' => 'Roosevelt Main Gym, 6:00 PM to 8:00 PM',
+                'sort_order' => 2,
+            ],
+        );
+
+        Update::query()->updateOrCreate(
+            ['category' => Update::CATEGORY_EVENT, 'title' => 'Parent and Player Meeting'],
+            [
+                'subtitle' => 'Jul 25, 2026',
+                'description' => 'Team expectations, travel plans, and fundraiser goals at 5:30 PM',
+                'sort_order' => 3,
+            ],
+        );
+
+        Update::query()->updateOrCreate(
+            ['category' => Update::CATEGORY_SUCCESS_STORY, 'title' => 'Earned a college roster spot'],
+            [
+                'subtitle' => 'Jalen M.',
+                'description' => 'Improved GPA and consistency through daily accountability and skill sessions.',
+                'sort_order' => 4,
+            ],
+        );
+
+        HighlightLink::query()->updateOrCreate(
+            ['url' => 'https://www.youtube.com/watch?v=j_C7i5hVnbw'],
+            ['title' => 'Splash City West Highlight Reel'],
+        );
+
+        HighlightLink::query()->updateOrCreate(
+            ['url' => 'https://www.youtube.com/shorts/j_C7i5hVnbw'],
+            ['title' => 'Roosevelt Skills Session'],
+        );
+
+        HighlightLink::query()->updateOrCreate(
+            ['url' => 'https://youtu.be/j_C7i5hVnbw'],
+            ['title' => 'Game Day Highlights'],
         );
 
         DonationLink::query()->updateOrCreate(

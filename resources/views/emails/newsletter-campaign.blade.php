@@ -19,6 +19,18 @@
         : 'Latest updates from coaching staff, programs, and upcoming events.';
     $ctaText = $isFundraising ? 'Support The Program' : 'See Program Updates';
     $bodyParagraphs = array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', (string) $body)));
+    $embeddedImageCid = null;
+    $embeddedImageData = is_array($embeddedImage ?? null) ? (string) ($embeddedImage['data'] ?? '') : '';
+    $embeddedImageName = is_array($embeddedImage ?? null) ? (string) ($embeddedImage['name'] ?? 'newsletter-image') : 'newsletter-image';
+    $embeddedImageMime = is_array($embeddedImage ?? null) ? (string) ($embeddedImage['mime'] ?? 'application/octet-stream') : 'application/octet-stream';
+
+    if ($embeddedImageData !== '' && isset($message) && method_exists($message, 'embedData')) {
+        $embeddedImageCid = $message->embedData(
+            $embeddedImageData,
+            $embeddedImageName,
+            $embeddedImageMime
+        );
+    }
 @endphp
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#e9eef5;padding:30px 12px;">
     <tr>
@@ -64,6 +76,10 @@
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">
                             <tr>
                                 <td style="padding:18px 18px 6px 18px;">
+                                    @if ($embeddedImageCid)
+                                        <img src="{{ $embeddedImageCid }}" alt="Campaign image" style="display:block;width:100%;max-width:640px;height:auto;border-radius:10px;margin:0 0 16px 0;border:1px solid #e2e8f0;" />
+                                    @endif
+
                                     @forelse ($bodyParagraphs as $paragraph)
                                         <p style="margin:0 0 12px 0;font-size:16px;line-height:1.72;color:#1e293b;">{{ $paragraph }}</p>
                                     @empty

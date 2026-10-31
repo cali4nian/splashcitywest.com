@@ -3,13 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\DonationLink;
+use App\Models\HighlightLink;
 use App\Models\NewsletterContact;
-use App\Models\Program;
 use App\Models\SiteSetting;
-use App\Models\SiteEvent;
 use App\Models\StaffMember;
-use App\Models\SuccessStory;
 use App\Models\SocialLink;
+use App\Models\Update;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -28,30 +27,27 @@ class AdminSettingsController extends Controller
     {
         [
             'settings' => $settings,
-            'programs' => $programs,
+            'updates' => $updates,
             'socialLinks' => $socialLinks,
-            'events' => $events,
-            'successStories' => $successStories,
             'donationLinks' => $donationLinks,
             'staffMembers' => $staffMembers,
         ] = $this->buildAdminData();
 
-        return view('admin.dashboard', compact('settings', 'programs', 'socialLinks', 'events', 'successStories', 'donationLinks', 'staffMembers'));
+        return view('admin.dashboard', compact('settings', 'updates', 'socialLinks', 'donationLinks', 'staffMembers'));
     }
 
     public function settings(): View
     {
         [
             'settings' => $settings,
-            'programs' => $programs,
+            'updates' => $updates,
+            'highlightLinks' => $highlightLinks,
             'socialLinks' => $socialLinks,
-            'events' => $events,
-            'successStories' => $successStories,
             'donationLinks' => $donationLinks,
             'staffMembers' => $staffMembers,
         ] = $this->buildAdminData();
 
-        return view('admin.settings', compact('settings', 'programs', 'socialLinks', 'events', 'successStories', 'donationLinks', 'staffMembers'));
+        return view('admin.settings', compact('settings', 'updates', 'highlightLinks', 'socialLinks', 'donationLinks', 'staffMembers'));
     }
 
     public function newsletters(Request $request): View
@@ -93,28 +89,60 @@ class AdminSettingsController extends Controller
             'programs_represented' => (int) $rawSettings['programs_represented'],
         ];
 
-        $programs = Schema::hasTable('programs')
-            ? Program::query()->orderBy('name')->get()
+        $updates = Schema::hasTable('updates')
+            ? Update::query()->orderBy('sort_order')->orderBy('id')->get()
             : collect();
 
-        if (Schema::hasTable('programs') && $programs->isEmpty()) {
-            Program::query()->create([
-                'name' => 'Splash City West',
+        if (Schema::hasTable('updates') && $updates->isEmpty()) {
+            Update::query()->create([
+                'category' => Update::CATEGORY_PROGRAM,
+                'title' => 'Splash City West',
                 'subtitle' => 'AAU team',
                 'description' => 'A dedicated home for the AAU program. Share tryouts, tournament schedules, training priorities, and the values that guide the team.',
+                'sort_order' => 0,
             ]);
 
-            Program::query()->create([
-                'name' => 'Roosevelt High School',
+            Update::query()->create([
+                'category' => Update::CATEGORY_PROGRAM,
+                'title' => 'Roosevelt High School',
                 'subtitle' => 'High school program',
                 'description' => 'A high-level Division II program built on high standards, accountability, and preparation for success in the classroom and in life.',
+                'sort_order' => 1,
             ]);
 
-            $programs = Program::query()->orderBy('name')->get();
+            Update::query()->create([
+                'category' => Update::CATEGORY_EVENT,
+                'title' => 'Splash City West Open Gym',
+                'subtitle' => 'Jul 18, 2026',
+                'description' => 'Roosevelt Main Gym, 6:00 PM to 8:00 PM',
+                'sort_order' => 2,
+            ]);
+
+            Update::query()->create([
+                'category' => Update::CATEGORY_EVENT,
+                'title' => 'Parent and Player Meeting',
+                'subtitle' => 'Jul 25, 2026',
+                'description' => 'Team expectations, travel plans, and fundraiser goals at 5:30 PM',
+                'sort_order' => 3,
+            ]);
+
+            Update::query()->create([
+                'category' => Update::CATEGORY_SUCCESS_STORY,
+                'title' => 'Earned a college roster spot',
+                'subtitle' => 'Jalen M.',
+                'description' => 'Improved GPA and consistency through daily accountability and skill sessions.',
+                'sort_order' => 4,
+            ]);
+
+            $updates = Update::query()->orderBy('sort_order')->orderBy('id')->get();
         }
 
         $socialLinks = Schema::hasTable('social_links')
             ? SocialLink::query()->orderBy('id')->get()
+            : collect();
+
+        $highlightLinks = Schema::hasTable('highlight_links')
+            ? HighlightLink::query()->orderBy('id')->get()
             : collect();
 
         if (Schema::hasTable('social_links') && $socialLinks->isEmpty()) {
@@ -131,58 +159,6 @@ class AdminSettingsController extends Controller
             ]);
 
             $socialLinks = SocialLink::query()->orderBy('id')->get();
-        }
-
-        $events = Schema::hasTable('site_events')
-            ? SiteEvent::query()->orderBy('id')->get()
-            : collect();
-
-        if (Schema::hasTable('site_events') && $events->isEmpty()) {
-            SiteEvent::query()->create([
-                'event_date' => 'Jul 18, 2026',
-                'title' => 'Splash City West Open Gym',
-                'details' => 'Roosevelt Main Gym, 6:00 PM to 8:00 PM',
-            ]);
-
-            SiteEvent::query()->create([
-                'event_date' => 'Jul 25, 2026',
-                'title' => 'Parent and Player Meeting',
-                'details' => 'Team expectations, travel plans, and fundraiser goals at 5:30 PM',
-            ]);
-
-            SiteEvent::query()->create([
-                'event_date' => 'Aug 2, 2026',
-                'title' => 'Roosevelt Skills Session',
-                'details' => 'Ball handling, shooting reps, and defensive stations at 9:00 AM',
-            ]);
-
-            $events = SiteEvent::query()->orderBy('id')->get();
-        }
-
-        $successStories = Schema::hasTable('success_stories')
-            ? SuccessStory::query()->orderBy('id')->get()
-            : collect();
-
-        if (Schema::hasTable('success_stories') && $successStories->isEmpty()) {
-            SuccessStory::query()->create([
-                'name' => 'Jalen M.',
-                'title' => 'Earned a college roster spot',
-                'description' => 'Improved GPA and consistency through daily accountability and skill sessions.',
-            ]);
-
-            SuccessStory::query()->create([
-                'name' => 'Marcus T.',
-                'title' => 'Team captain leadership growth',
-                'description' => 'Led summer workouts and helped raise attendance standards for younger players.',
-            ]);
-
-            SuccessStory::query()->create([
-                'name' => 'Isaiah R.',
-                'title' => 'All-tournament recognition',
-                'description' => 'Turned defensive effort into impact plays and became a trusted closer in games.',
-            ]);
-
-            $successStories = SuccessStory::query()->orderBy('id')->get();
         }
 
         $donationLinks = Schema::hasTable('donation_links')
@@ -229,7 +205,7 @@ class AdminSettingsController extends Controller
             ? NewsletterContact::query()->orderByDesc('created_at')->get()
             : collect();
 
-        return compact('settings', 'programs', 'socialLinks', 'events', 'successStories', 'donationLinks', 'staffMembers', 'newsletterContacts');
+        return compact('settings', 'updates', 'highlightLinks', 'socialLinks', 'donationLinks', 'staffMembers', 'newsletterContacts');
     }
 
     public function update(Request $request): RedirectResponse
@@ -253,61 +229,65 @@ class AdminSettingsController extends Controller
             ->with('status', 'Admin settings updated successfully.');
     }
 
-    public function storeProgram(Request $request): RedirectResponse
+    public function storeUpdate(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
+            'category' => ['required', Rule::in(array_keys(Update::categoryOptions()))],
+            'title' => ['required', 'string', 'max:255'],
             'subtitle' => ['nullable', 'string', 'max:100'],
             'description' => ['required', 'string', 'max:1000'],
             'image' => ['nullable', 'image', 'max:4096'],
         ]);
 
         if ($request->hasFile('image')) {
-            $validated['image_path'] = $request->file('image')->store('programs', 'public');
+            $validated['image_path'] = $request->file('image')->store('updates', 'public');
         }
 
-        Program::query()->create($validated);
+        $validated['sort_order'] = (int) (Update::query()->max('sort_order') ?? -1) + 1;
+
+        Update::query()->create($validated);
 
         return redirect()
             ->route('admin.settings')
-            ->with('status', 'Program created successfully.');
+            ->with('status', 'Update created successfully.');
     }
 
-    public function updateProgram(Request $request, Program $program): RedirectResponse
+    public function updateUpdate(Request $request, Update $update): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
+            'category' => ['required', Rule::in(array_keys(Update::categoryOptions()))],
+            'title' => ['required', 'string', 'max:255'],
             'subtitle' => ['nullable', 'string', 'max:100'],
             'description' => ['required', 'string', 'max:1000'],
             'image' => ['nullable', 'image', 'max:4096'],
         ]);
 
         if ($request->hasFile('image')) {
-            if ($program->image_path && Storage::disk('public')->exists($program->image_path)) {
-                Storage::disk('public')->delete($program->image_path);
+            if ($update->image_path && Storage::disk('public')->exists($update->image_path)) {
+                Storage::disk('public')->delete($update->image_path);
             }
 
-            $validated['image_path'] = $request->file('image')->store('programs', 'public');
+            $validated['image_path'] = $request->file('image')->store('updates', 'public');
         }
 
-        $program->update($validated);
+        $update->update($validated);
 
         return redirect()
             ->route('admin.settings')
-            ->with('status', 'Program updated successfully.');
+            ->with('status', 'Update updated successfully.');
     }
 
-    public function destroyProgram(Program $program): RedirectResponse
+    public function destroyUpdate(Update $update): RedirectResponse
     {
-        if ($program->image_path && Storage::disk('public')->exists($program->image_path)) {
-            Storage::disk('public')->delete($program->image_path);
+        if ($update->image_path && Storage::disk('public')->exists($update->image_path)) {
+            Storage::disk('public')->delete($update->image_path);
         }
 
-        $program->delete();
+        $update->delete();
 
         return redirect()
             ->route('admin.settings')
-            ->with('status', 'Program deleted successfully.');
+            ->with('status', 'Update deleted successfully.');
     }
 
     public function storeSocialLink(Request $request): RedirectResponse
@@ -349,118 +329,41 @@ class AdminSettingsController extends Controller
             ->with('status', 'Social link deleted successfully.');
     }
 
-    public function storeEvent(Request $request): RedirectResponse
+    public function storeHighlightLink(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'event_date' => ['required', 'string', 'max:100'],
-            'title' => ['required', 'string', 'max:255'],
-            'details' => ['required', 'string', 'max:1000'],
-            'image' => ['nullable', 'image', 'max:4096'],
+            'title' => ['required', 'string', 'max:150'],
+            'url' => ['required', 'url', 'max:2048'],
         ]);
 
-        if ($request->hasFile('image')) {
-            $validated['image_path'] = $request->file('image')->store('events', 'public');
-        }
-
-        SiteEvent::query()->create($validated);
+        HighlightLink::query()->create($validated);
 
         return redirect()
             ->route('admin.settings')
-            ->with('status', 'Event created successfully.');
+            ->with('status', 'Highlight link created successfully.');
     }
 
-    public function updateEvent(Request $request, SiteEvent $event): RedirectResponse
+    public function updateHighlightLink(Request $request, HighlightLink $highlightLink): RedirectResponse
     {
         $validated = $request->validate([
-            'event_date' => ['required', 'string', 'max:100'],
-            'title' => ['required', 'string', 'max:255'],
-            'details' => ['required', 'string', 'max:1000'],
-            'image' => ['nullable', 'image', 'max:4096'],
+            'title' => ['required', 'string', 'max:150'],
+            'url' => ['required', 'url', 'max:2048'],
         ]);
 
-        if ($request->hasFile('image')) {
-            if ($event->image_path && Storage::disk('public')->exists($event->image_path)) {
-                Storage::disk('public')->delete($event->image_path);
-            }
-
-            $validated['image_path'] = $request->file('image')->store('events', 'public');
-        }
-
-        $event->update($validated);
+        $highlightLink->update($validated);
 
         return redirect()
             ->route('admin.settings')
-            ->with('status', 'Event updated successfully.');
+            ->with('status', 'Highlight link updated successfully.');
     }
 
-    public function destroyEvent(SiteEvent $event): RedirectResponse
+    public function destroyHighlightLink(HighlightLink $highlightLink): RedirectResponse
     {
-        if ($event->image_path && Storage::disk('public')->exists($event->image_path)) {
-            Storage::disk('public')->delete($event->image_path);
-        }
-
-        $event->delete();
+        $highlightLink->delete();
 
         return redirect()
             ->route('admin.settings')
-            ->with('status', 'Event deleted successfully.');
-    }
-
-    public function storeSuccessStory(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:150'],
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string', 'max:1500'],
-            'image' => ['nullable', 'image', 'max:4096'],
-        ]);
-
-        if ($request->hasFile('image')) {
-            $validated['image_path'] = $request->file('image')->store('success-stories', 'public');
-        }
-
-        SuccessStory::query()->create($validated);
-
-        return redirect()
-            ->route('admin.settings')
-            ->with('status', 'Success story created successfully.');
-    }
-
-    public function updateSuccessStory(Request $request, SuccessStory $successStory): RedirectResponse
-    {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:150'],
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string', 'max:1500'],
-            'image' => ['nullable', 'image', 'max:4096'],
-        ]);
-
-        if ($request->hasFile('image')) {
-            if ($successStory->image_path && Storage::disk('public')->exists($successStory->image_path)) {
-                Storage::disk('public')->delete($successStory->image_path);
-            }
-
-            $validated['image_path'] = $request->file('image')->store('success-stories', 'public');
-        }
-
-        $successStory->update($validated);
-
-        return redirect()
-            ->route('admin.settings')
-            ->with('status', 'Success story updated successfully.');
-    }
-
-    public function destroySuccessStory(SuccessStory $successStory): RedirectResponse
-    {
-        if ($successStory->image_path && Storage::disk('public')->exists($successStory->image_path)) {
-            Storage::disk('public')->delete($successStory->image_path);
-        }
-
-        $successStory->delete();
-
-        return redirect()
-            ->route('admin.settings')
-            ->with('status', 'Success story deleted successfully.');
+            ->with('status', 'Highlight link deleted successfully.');
     }
 
     public function storeDonationLink(Request $request): RedirectResponse
@@ -601,6 +504,7 @@ class AdminSettingsController extends Controller
                 'campaign_template' => ['required', Rule::in(['informational', 'fundraising'])],
                 'campaign_title' => ['required', 'string', 'max:150'],
                 'campaign_body' => ['required', 'string', 'max:10000'],
+                'campaign_embedded_image' => ['nullable', 'file', 'max:10240', 'mimes:jpg,jpeg,png,gif,webp,bmp,avif'],
                 'campaign_attachments' => ['nullable', 'array', 'max:8'],
                 'campaign_attachments.*' => [
                     'file',
@@ -629,11 +533,55 @@ class AdminSettingsController extends Controller
                 ->values()
                 ->all();
 
+            $embeddedImageUpload = $request->file('campaign_embedded_image');
+            $embeddedImage = null;
+
+            if ($embeddedImageUpload instanceof UploadedFile) {
+                $embeddedImageData = (string) file_get_contents($embeddedImageUpload->getRealPath());
+                $embeddedImageMime = $embeddedImageUpload->getMimeType() ?: 'application/octet-stream';
+
+                if ($embeddedImageData !== '') {
+                    $embeddedImageAutoShrinkThresholdBytes = 5 * 1024 * 1024;
+
+                    if (strlen($embeddedImageData) > $embeddedImageAutoShrinkThresholdBytes) {
+                        $shrunkenImage = $this->shrinkImageBinaryToMaxBytes($embeddedImageData, $embeddedImageAutoShrinkThresholdBytes);
+
+                        if ($shrunkenImage !== null) {
+                            $embeddedImageData = $shrunkenImage['data'];
+                            $embeddedImageMime = $shrunkenImage['mime'];
+                        }
+                    }
+
+                    $embeddedImage = [
+                        'name' => $embeddedImageUpload->getClientOriginalName() ?: 'newsletter-image',
+                        'mime' => $embeddedImageMime,
+                        'data' => $embeddedImageData,
+                    ];
+                }
+            }
+
+            $maxMessageBytes = max(1_000_000, (int) config('mail.newsletter_max_message_bytes', 4_800_000));
+            $estimatedPayloadBytes = $this->estimateNewsletterPayloadBytes(
+                (string) $validated['campaign_title'],
+                (string) $validated['campaign_body'],
+                $attachments,
+                $embeddedImage
+            );
+
+            if ($estimatedPayloadBytes > $maxMessageBytes) {
+                $maxMessageMb = round($maxMessageBytes / 1024 / 1024, 2);
+                $payloadMb = round($estimatedPayloadBytes / 1024 / 1024, 2);
+
+                return redirect()
+                    ->route('admin.newsletters')
+                    ->with('status', "Email campaign not sent. Estimated payload size {$payloadMb} MB exceeds SMTP/provider limit of {$maxMessageMb} MB. Reduce embedded image or attachments and try again.");
+            }
+
             $sent = 0;
             $failed = 0;
-            $deletedAfterFailure = 0;
             $networkFailures = 0;
             $senderConfigurationFailures = 0;
+            $messageSizeFailures = 0;
             $stoppedForSenderConfiguration = false;
             $recipientCount = $recipients->count();
             $delayBetweenSendsMicroseconds = max(0, min(6_000_000, (int) config('mail.newsletter_send_delay_us', 750000)));
@@ -648,6 +596,7 @@ class AdminSettingsController extends Controller
                         'template' => $validated['campaign_template'],
                         'title' => $validated['campaign_title'],
                         'body' => $validated['campaign_body'],
+                        'embeddedImage' => $embeddedImage,
                         'recipientName' => $recipient->name,
                     ], function ($message) use ($recipient, $validated, $attachments): void {
                         $message->to($recipient->email, $recipient->name)
@@ -666,18 +615,18 @@ class AdminSettingsController extends Controller
                     $failed++;
 
                     $isSenderConfigurationFailure = $this->isMailSenderConfigurationFailure($exception);
+                    $isMessageSizeFailure = $this->isMailMessageSizeFailure($exception);
 
-                    if ($this->shouldDeleteNewsletterContactAfterFailure($exception)) {
-                        $recipient->delete();
-                        $deletedAfterFailure++;
-                    } elseif ($isSenderConfigurationFailure) {
+                    if ($isSenderConfigurationFailure) {
                         $senderConfigurationFailures++;
                         $stoppedForSenderConfiguration = true;
+                    } elseif ($isMessageSizeFailure) {
+                        $messageSizeFailures++;
                     } else {
                         $networkFailures++;
                     }
 
-                    if ($isSenderConfigurationFailure) {
+                    if ($isSenderConfigurationFailure || $isMessageSizeFailure) {
                         // Sender/domain auth issues are global; continuing will fail for all recipients.
                         break;
                     }
@@ -695,12 +644,12 @@ class AdminSettingsController extends Controller
                 $statusMessage .= " {$failed} sends failed. Check mail configuration or logs.";
             }
 
-            if ($deletedAfterFailure > 0) {
-                $statusMessage .= " Removed {$deletedAfterFailure} failed contact entries.";
-            }
-
             if ($networkFailures > 0) {
                 $statusMessage .= " {$networkFailures} failed sends were kept due to network/connectivity issues.";
+            }
+
+            if ($messageSizeFailures > 0) {
+                $statusMessage .= ' Sending stopped because the SMTP provider rejected the message size. Reduce embedded image or attachments.';
             }
 
             if ($senderConfigurationFailures > 0) {
@@ -717,9 +666,25 @@ class AdminSettingsController extends Controller
         } catch (Throwable $exception) {
             report($exception);
 
+            $statusMessage = 'Email campaign could not be sent due to a server issue.';
+
+            if ($this->isMailSenderConfigurationFailure($exception)) {
+                $statusMessage = 'Email campaign could not be sent because SMTP sender authentication failed. Verify MAIL_USERNAME, MAIL_PASSWORD, and MAIL_FROM_ADDRESS.';
+            } elseif ($this->isMailMessageSizeFailure($exception)) {
+                $statusMessage = 'Email campaign could not be sent because the SMTP provider rejected the message size. Reduce embedded image or attachments and try again.';
+            } elseif ($this->isNetworkConnectivityFailure($exception)) {
+                $statusMessage = 'Email campaign could not be sent due to SMTP/network connectivity issues. Check MAIL_HOST, MAIL_PORT, firewall, and internet access.';
+            } else {
+                $exceptionMessage = trim((string) $exception->getMessage());
+
+                if ($exceptionMessage !== '') {
+                    $statusMessage .= ' Error: ' . $exceptionMessage;
+                }
+            }
+
             return redirect()
                 ->route('admin.newsletters')
-                ->with('status', 'Email campaign could not be sent due to a server or mail configuration issue. Check logs and mail credentials.');
+                ->with('status', $statusMessage);
         }
     }
 
@@ -765,6 +730,63 @@ class AdminSettingsController extends Controller
         return redirect()
             ->route('admin.newsletters')
             ->with('status', "Deleted {$deletedCount} newsletter contacts.");
+    }
+
+    public function testNewsletterContactDeliverability(): RedirectResponse
+    {
+        $contacts = NewsletterContact::query()->orderBy('id')->get(['id', 'email']);
+
+        if ($contacts->isEmpty()) {
+            return redirect()
+                ->route('admin.newsletters')
+                ->with('status', 'No newsletter contacts found to test.');
+        }
+
+        $checkedCount = 0;
+        $removedCount = 0;
+        $inconclusiveCount = 0;
+        $removedSamples = [];
+
+        foreach ($contacts as $contact) {
+            $checkedCount++;
+            $inconclusive = false;
+            $failureReason = $this->getNewsletterDeliverabilityFailureReason((string) $contact->email, $inconclusive);
+
+            if ($inconclusive) {
+                $inconclusiveCount++;
+            }
+
+            if ($failureReason === null) {
+                continue;
+            }
+
+            $contact->delete();
+            $removedCount++;
+
+            if (count($removedSamples) < 5) {
+                $removedSamples[] = $contact->email . ' (' . $failureReason . ')';
+            }
+        }
+
+        $statusMessage = "Deliverability test completed. Checked {$checkedCount} contacts.";
+
+        if ($removedCount === 0) {
+            $statusMessage .= ' No contacts were removed.';
+        } else {
+            $statusMessage .= " Removed {$removedCount} contacts that failed validation checks.";
+
+            if (count($removedSamples) > 0) {
+                $statusMessage .= ' Sample removals: ' . implode('; ', $removedSamples) . '.';
+            }
+        }
+
+        if ($inconclusiveCount > 0) {
+            $statusMessage .= " {$inconclusiveCount} contacts returned inconclusive SMTP checks and were kept.";
+        }
+
+        return redirect()
+            ->route('admin.newsletters')
+            ->with('status', $statusMessage);
     }
 
     public function importNewsletterContacts(Request $request): RedirectResponse
@@ -963,17 +985,408 @@ class AdminSettingsController extends Controller
         return array_keys($array) !== range(0, count($array) - 1);
     }
 
-    private function shouldDeleteNewsletterContactAfterFailure(Throwable $exception): bool
+    private function getNewsletterDeliverabilityFailureReason(string $email, bool &$inconclusive = false): ?string
     {
-        if ($this->isNetworkConnectivityFailure($exception)) {
+        $inconclusive = false;
+        $normalizedEmail = strtolower(trim($email));
+
+        if (! filter_var($normalizedEmail, FILTER_VALIDATE_EMAIL)) {
+            return 'invalid email format';
+        }
+
+        [$localPart, $domain] = array_pad(explode('@', $normalizedEmail, 2), 2, '');
+
+        if ($localPart === '' || $domain === '' || ! str_contains($domain, '.')) {
+            return 'invalid email domain';
+        }
+
+        if ($this->isRoleBasedAddress($localPart)) {
+            return 'role-based address';
+        }
+
+        if ($this->isDisposableEmailDomain($domain)) {
+            return 'disposable email domain';
+        }
+
+        if (! $this->hasDeliverableDnsRecords($domain)) {
+            return 'domain has no MX/A/AAAA DNS records';
+        }
+
+        $activeInboxStatus = $this->checkActiveInboxStatus($normalizedEmail, $domain);
+
+        if ($activeInboxStatus === 'inactive') {
+            return 'inactive inbox';
+        }
+
+        if ($activeInboxStatus === 'unknown') {
+            $inconclusive = true;
+        }
+
+        return null;
+    }
+
+    private function checkActiveInboxStatus(string $email, string $domain): string
+    {
+        $activeInboxCheckEnabled = (bool) config('mail.newsletter_active_inbox_check', true);
+
+        if (! $activeInboxCheckEnabled) {
+            return 'unknown';
+        }
+
+        $mxHosts = [];
+        $mxWeights = [];
+
+        if (function_exists('getmxrr')) {
+            @getmxrr($domain, $mxHosts, $mxWeights);
+        }
+
+        if (count($mxHosts) === 0) {
+            return 'unknown';
+        }
+
+        $hostEntries = [];
+
+        foreach ($mxHosts as $index => $mxHost) {
+            $hostEntries[] = [
+                'host' => (string) $mxHost,
+                'weight' => (int) ($mxWeights[$index] ?? 0),
+            ];
+        }
+
+        usort($hostEntries, static fn (array $a, array $b): int => $a['weight'] <=> $b['weight']);
+
+        $timeoutSeconds = max(3, min(15, (int) config('mail.newsletter_smtp_probe_timeout_seconds', 6)));
+        $heloHost = (string) (parse_url((string) config('app.url', ''), PHP_URL_HOST) ?: 'localhost');
+        $mailFrom = (string) config('mail.from.address', 'mailer@localhost.localdomain');
+
+        if (! filter_var($mailFrom, FILTER_VALIDATE_EMAIL)) {
+            $mailFrom = 'mailer@localhost.localdomain';
+        }
+
+        $hadUnknown = false;
+        $maxHostsToProbe = 3;
+
+        foreach (array_slice($hostEntries, 0, $maxHostsToProbe) as $entry) {
+            $probeResult = $this->probeSmtpRecipient($entry['host'], $email, $heloHost, $mailFrom, $timeoutSeconds);
+
+            if ($probeResult === 'active') {
+                return 'active';
+            }
+
+            if ($probeResult === 'inactive') {
+                return 'inactive';
+            }
+
+            $hadUnknown = true;
+        }
+
+        return $hadUnknown ? 'unknown' : 'active';
+    }
+
+    private function probeSmtpRecipient(string $mxHost, string $recipientEmail, string $heloHost, string $mailFrom, int $timeoutSeconds): string
+    {
+        $socket = @stream_socket_client(
+            'tcp://' . $mxHost . ':25',
+            $errorNumber,
+            $errorMessage,
+            $timeoutSeconds,
+            STREAM_CLIENT_CONNECT
+        );
+
+        if (! is_resource($socket)) {
+            return 'unknown';
+        }
+
+        stream_set_timeout($socket, $timeoutSeconds);
+
+        try {
+            $greetingCode = $this->readSmtpResponseCode($socket);
+
+            if ($greetingCode !== 220) {
+                return 'unknown';
+            }
+
+            $ehloCode = $this->sendSmtpCommand($socket, 'EHLO ' . $heloHost);
+
+            if ($ehloCode !== 250) {
+                $heloCode = $this->sendSmtpCommand($socket, 'HELO ' . $heloHost);
+
+                if ($heloCode !== 250) {
+                    return 'unknown';
+                }
+            }
+
+            $mailCode = $this->sendSmtpCommand($socket, 'MAIL FROM:<' . $mailFrom . '>');
+
+            if (! in_array($mailCode, [250, 251], true)) {
+                return 'unknown';
+            }
+
+            $rcptCode = $this->sendSmtpCommand($socket, 'RCPT TO:<' . $recipientEmail . '>');
+
+            if (in_array($rcptCode, [250, 251], true)) {
+                return 'active';
+            }
+
+            if (in_array($rcptCode, [550, 551, 552, 553, 554], true)) {
+                return 'inactive';
+            }
+
+            return 'unknown';
+        } finally {
+            @fwrite($socket, "QUIT\r\n");
+            @fclose($socket);
+        }
+    }
+
+    private function sendSmtpCommand($socket, string $command): ?int
+    {
+        $written = @fwrite($socket, $command . "\r\n");
+
+        if ($written === false) {
+            return null;
+        }
+
+        return $this->readSmtpResponseCode($socket);
+    }
+
+    private function readSmtpResponseCode($socket): ?int
+    {
+        $lastCode = null;
+
+        for ($i = 0; $i < 30; $i++) {
+            $line = @fgets($socket, 512);
+
+            if ($line === false) {
+                $meta = stream_get_meta_data($socket);
+
+                if (($meta['timed_out'] ?? false) === true) {
+                    return null;
+                }
+
+                return $lastCode;
+            }
+
+            if (preg_match('/^(\d{3})([\-\s])/', $line, $matches) !== 1) {
+                continue;
+            }
+
+            $lastCode = (int) $matches[1];
+
+            if ($matches[2] === ' ') {
+                return $lastCode;
+            }
+        }
+
+        return $lastCode;
+    }
+
+    private function isRoleBasedAddress(string $localPart): bool
+    {
+        $rolePrefixes = [
+            'admin',
+            'support',
+            'contact',
+            'info',
+            'sales',
+            'billing',
+            'help',
+            'team',
+            'hello',
+            'noreply',
+            'no-reply',
+            'mailer-daemon',
+            'postmaster',
+            'abuse',
+            'security',
+            'webmaster',
+        ];
+
+        return in_array(strtolower($localPart), $rolePrefixes, true);
+    }
+
+    private function isDisposableEmailDomain(string $domain): bool
+    {
+        $disposableDomains = [
+            'mailinator.com',
+            'tempmail.com',
+            '10minutemail.com',
+            'guerrillamail.com',
+            'yopmail.com',
+            'trashmail.com',
+            'dispostable.com',
+            'fakeinbox.com',
+            'mintemail.com',
+            'throwawaymail.com',
+        ];
+
+        $normalizedDomain = strtolower($domain);
+
+        return in_array($normalizedDomain, $disposableDomains, true);
+    }
+
+    private function hasDeliverableDnsRecords(string $domain): bool
+    {
+        $normalizedDomain = strtolower(trim($domain));
+
+        if ($normalizedDomain === '') {
             return false;
         }
 
-        if ($this->isMailSenderConfigurationFailure($exception)) {
-            return false;
+        if (function_exists('checkdnsrr') && checkdnsrr($normalizedDomain, 'MX')) {
+            return true;
         }
 
-        return true;
+        if (function_exists('getmxrr')) {
+            $hosts = [];
+
+            if (getmxrr($normalizedDomain, $hosts) && count($hosts) > 0) {
+                return true;
+            }
+        }
+
+        if (function_exists('checkdnsrr')) {
+            if (checkdnsrr($normalizedDomain, 'A') || checkdnsrr($normalizedDomain, 'AAAA')) {
+                return true;
+            }
+        }
+
+        if (function_exists('dns_get_record')) {
+            $aRecords = @dns_get_record($normalizedDomain, DNS_A);
+            $aaaaRecords = @dns_get_record($normalizedDomain, DNS_AAAA);
+
+            if ((is_array($aRecords) && count($aRecords) > 0) || (is_array($aaaaRecords) && count($aaaaRecords) > 0)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Estimate MIME payload size before SMTP send to avoid provider hard limits.
+     *
+     * @param array<int, array{name:string,mime:string,data:string}> $attachments
+     * @param array{name:string,mime:string,data:string}|null $embeddedImage
+     */
+    private function estimateNewsletterPayloadBytes(string $title, string $body, array $attachments, ?array $embeddedImage): int
+    {
+        $bytes = strlen($title) + strlen($body);
+
+        foreach ($attachments as $attachment) {
+            $bytes += strlen((string) ($attachment['data'] ?? ''));
+        }
+
+        if (is_array($embeddedImage)) {
+            $bytes += strlen((string) ($embeddedImage['data'] ?? ''));
+        }
+
+        $bytes = (int) ceil($bytes * 1.37);
+
+        return $bytes + 50_000;
+    }
+
+    /**
+     * Shrink image binary to a target size using GD by converting/resampling to JPEG.
+     *
+     * @return array{data:string,mime:string}|null
+     */
+    private function shrinkImageBinaryToMaxBytes(string $binary, int $maxBytes): ?array
+    {
+        if ($binary === '' || $maxBytes <= 0) {
+            return null;
+        }
+
+        if (! function_exists('imagecreatefromstring') || ! function_exists('imagejpeg')) {
+            return null;
+        }
+
+        $sourceImage = @imagecreatefromstring($binary);
+
+        if ($sourceImage === false) {
+            return null;
+        }
+
+        $width = imagesx($sourceImage);
+        $height = imagesy($sourceImage);
+
+        if ($width < 1 || $height < 1) {
+            imagedestroy($sourceImage);
+
+            return null;
+        }
+
+        $scale = 1.0;
+        $quality = 85;
+        $bestData = null;
+
+        for ($attempt = 0; $attempt < 10; $attempt++) {
+            $targetWidth = max(1, (int) floor($width * $scale));
+            $targetHeight = max(1, (int) floor($height * $scale));
+
+            $canvas = imagecreatetruecolor($targetWidth, $targetHeight);
+
+            if ($canvas === false) {
+                break;
+            }
+
+            // Flatten to white background to preserve readability for transparent PNG/GIF uploads.
+            $white = imagecolorallocate($canvas, 255, 255, 255);
+            imagefilledrectangle($canvas, 0, 0, $targetWidth, $targetHeight, $white);
+
+            imagecopyresampled(
+                $canvas,
+                $sourceImage,
+                0,
+                0,
+                0,
+                0,
+                $targetWidth,
+                $targetHeight,
+                $width,
+                $height
+            );
+
+            ob_start();
+            imagejpeg($canvas, null, $quality);
+            $candidate = (string) ob_get_clean();
+
+            imagedestroy($canvas);
+
+            if ($candidate === '') {
+                continue;
+            }
+
+            if ($bestData === null || strlen($candidate) < strlen($bestData)) {
+                $bestData = $candidate;
+            }
+
+            if (strlen($candidate) <= $maxBytes) {
+                imagedestroy($sourceImage);
+
+                return [
+                    'data' => $candidate,
+                    'mime' => 'image/jpeg',
+                ];
+            }
+
+            if ($quality > 45) {
+                $quality -= 10;
+            } else {
+                $scale *= 0.82;
+            }
+        }
+
+        imagedestroy($sourceImage);
+
+        if ($bestData !== null) {
+            return [
+                'data' => $bestData,
+                'mime' => 'image/jpeg',
+            ];
+        }
+
+        return null;
     }
 
     private function isNetworkConnectivityFailure(Throwable $exception): bool
@@ -1031,6 +1444,34 @@ class AdminSettingsController extends Controller
             $message = strtolower($current->getMessage());
 
             foreach ($senderConfigKeywords as $keyword) {
+                if (str_contains($message, $keyword)) {
+                    return true;
+                }
+            }
+
+            $current = $current->getPrevious();
+        }
+
+        return false;
+    }
+
+    private function isMailMessageSizeFailure(Throwable $exception): bool
+    {
+        $sizeFailureKeywords = [
+            'message exceeded max message size',
+            'message size exceeds fixed maximum message size',
+            '552 5.7.0',
+            '552 5.3.4',
+            'maximum message size',
+            'message too large',
+        ];
+
+        $current = $exception;
+
+        while ($current instanceof Throwable) {
+            $message = strtolower($current->getMessage());
+
+            foreach ($sizeFailureKeywords as $keyword) {
                 if (str_contains($message, $keyword)) {
                     return true;
                 }

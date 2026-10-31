@@ -1,24 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
             <div>
                 <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-700">Administration</p>
                 <h2 class="mt-1 text-3xl font-bold text-slate-900">Newsletter Management</h2>
                 <p class="mt-2 text-sm text-slate-600">Import, organize, and send campaigns from one workspace.</p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-                <a
-                    href="{{ route('admin.dashboard') }}"
-                    class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-slate-900"
-                >
-                    Back to Dashboard
-                </a>
-                <a
-                    href="{{ route('admin.settings') }}"
-                    class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-slate-900"
-                >
-                    Open Landing Settings
-                </a>
             </div>
         </div>
     </x-slot>
@@ -155,11 +141,18 @@
                 </div>
 
                 <div class="sm:col-span-2">
+                    <x-input-label for="campaign_embedded_image" :value="__('Embedded Image (Optional, In Email Body)')" />
+                    <input id="campaign_embedded_image" name="campaign_embedded_image" type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/bmp,image/avif" class="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-slate-500" />
+                    <x-input-error class="mt-2" :messages="$errors->get('campaign_embedded_image')" />
+                    <p class="mt-2 text-xs text-slate-500">This image is embedded directly in the email body (not sent as an attachment). Images over 5 MB are auto-shrunk before send. Total email payload (body + embedded image + attachments) must still stay under your SMTP provider limit.</p>
+                </div>
+
+                <div class="sm:col-span-2">
                     <x-input-label for="campaign_attachments" :value="__('Attachments (Optional)')" />
                     <input id="campaign_attachments" name="campaign_attachments[]" type="file" multiple class="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-slate-500" />
                     <x-input-error class="mt-2" :messages="$errors->get('campaign_attachments')" />
                     <x-input-error class="mt-2" :messages="$errors->get('campaign_attachments.*')" />
-                    <p class="mt-2 text-xs text-slate-500">Accepted files include PDF, CSV, images (JPG, PNG, GIF, WEBP, HEIC, HEIF, AVIF, BMP), and Office docs (max 10 MB each, up to 8 files).</p>
+                    <p class="mt-2 text-xs text-slate-500">Accepted files include PDF, CSV, images (JPG, PNG, GIF, WEBP, HEIC, HEIF, AVIF, BMP), and Office docs (max 10 MB each, up to 8 files). Keep total campaign payload under your SMTP provider message-size cap.</p>
                 </div>
 
                 <div class="sm:col-span-2">
@@ -189,6 +182,18 @@
             </button>
 
             <div id="newsletter-section-saved-contacts" class="mt-5 hidden" data-collapse-content>
+            <form method="POST" action="{{ route('admin.newsletters.test-deliverability') }}" class="mb-5 flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4" onsubmit="return confirm('Run non-sending deliverability checks for all newsletter emails in the database and remove failing contacts?');">
+                @csrf
+
+                <x-primary-button>Check All Emails In Database (No Send)</x-primary-button>
+                <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-amber-900">
+                    {{ $newsletterContacts->total() }} total contacts
+                </span>
+                <p class="text-xs text-amber-800">
+                    This does not send emails. It checks each saved contact for active inbox deliverability (including SMTP mailbox checks) and removes entries that fail.
+                </p>
+            </form>
+
             <form method="POST" action="{{ route('admin.newsletters.destroy-all') }}" class="grid gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 sm:grid-cols-[1fr_auto] sm:items-end" onsubmit="return confirm('Delete ALL newsletter contacts? This action cannot be undone.');">
                 @csrf
 

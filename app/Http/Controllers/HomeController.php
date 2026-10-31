@@ -3,19 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Models\DonationLink;
-use App\Models\Program;
+use App\Models\HighlightLink;
 use App\Models\SiteSetting;
-use App\Models\SiteEvent;
 use App\Models\SocialLink;
 use App\Models\StaffMember;
-use App\Models\SuccessStory;
+use App\Models\Update;
 use Illuminate\View\View;
 
 class HomeController extends Controller
 {
     public function index(): View
     {
-        $programs = Program::publicPrograms();
+        $updates = Update::publicUpdates();
+
+        $programs = array_values(array_filter($updates, static function (array $update): bool {
+            return $update['category'] === Update::CATEGORY_PROGRAM;
+        }));
 
         $settings = SiteSetting::values(
             ['contact_phone', 'contact_email', 'college_commitments', 'programs_represented'],
@@ -56,7 +59,7 @@ class HomeController extends Controller
 
         $programCards = array_map(static function (array $program): array {
             return [
-                'title' => $program['name'],
+                'title' => $program['title'],
                 'subtitle' => $program['subtitle'] ?: 'Program image.',
                 'image' => $program['image_url'],
             ];
@@ -69,6 +72,8 @@ class HomeController extends Controller
             'programs' => $programs,
             'programCards' => $programCards,
             'featuredPrograms' => array_slice($programs, 0, 2),
+            'updates' => $updates,
+            'highlightLinks' => HighlightLink::publicLinks(),
             'contactPhone' => $contactPhone,
             'contactEmail' => $contactEmail,
             'collegeCommitments' => $collegeCommitments,
@@ -80,14 +85,7 @@ class HomeController extends Controller
                 ['label' => 'Email', 'value' => $contactEmail, 'href' => $emailHref],
             ],
             'socialLinks' => SocialLink::publicLinks(),
-            'upcomingEvents' => SiteEvent::publicEvents(),
             'staffMembers' => StaffMember::publicMembers(),
-            'recentHighlights' => [
-                '2 players selected to all-tournament teams this month.',
-                'Summer conditioning attendance reached 95% across both programs.',
-                'Community booster group launched a new travel support fund.',
-            ],
-            'successStories' => SuccessStory::publicStories(),
         ]);
     }
 }
